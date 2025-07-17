@@ -64,8 +64,8 @@
     - Write UI tests for favorites interactions
     - _Requirements: 4.1, 4.3_
 
-- [ ] 5. Basic Dual-Pane Interface
-  - [ ] 5.1 Create ContentView with dual-pane layout
+- [x] 5. Basic Dual-Pane Interface
+  - [x] 5.1 Create ContentView with dual-pane layout
     - Implement main ContentView with HSplitView
     - Add adjustable pane sizing with minimum/maximum constraints
     - Include window size management (1000x700 minimum)
@@ -73,7 +73,7 @@
     - Write UI tests for layout and resizing
     - _Requirements: 1.1, 1.2, 1.4, 7.1_
 
-  - [ ] 5.2 Implement DirectoryPanel for left pane
+  - [x] 5.2 Implement DirectoryPanel for left pane
     - Create DirectoryPanel SwiftUI view
     - Integrate FavoritesSection at the top
     - Add DirectoryBrowser for file tree navigation

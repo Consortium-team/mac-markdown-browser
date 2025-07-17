@@ -3,41 +3,28 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var fileSystemVM = FileSystemViewModel()
     @StateObject private var favoritesVM = FavoritesViewModel()
+    @State private var focusedPane: FocusedPane = .directory
+    @FocusState private var isDirectoryFocused: Bool
+    @FocusState private var isPreviewFocused: Bool
+    
+    enum FocusedPane {
+        case directory
+        case preview
+    }
     
     var body: some View {
         HSplitView {
             // Left Panel - Directory Browser
-            VStack(alignment: .leading, spacing: 0) {
-                // Favorites Section
-                FavoritesSection(
-                    favoritesVM: favoritesVM,
-                    fileSystemVM: fileSystemVM
-                )
-                .padding(.top, 8)
-                
-                Divider()
-                    .padding(.vertical, 8)
-                
-                // Directory Tree (placeholder for now)
-                ScrollView {
-                    VStack(alignment: .leading) {
-                        Text("Directory Tree")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal, 12)
-                        
-                        Text("(To be implemented)")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal, 12)
-                            .padding(.top, 20)
-                    }
-                }
-                
-                Spacer()
-            }
+            DirectoryPanel(
+                fileSystemVM: fileSystemVM,
+                favoritesVM: favoritesVM
+            )
             .frame(minWidth: 300, maxWidth: 500)
-            .background(Color(NSColor.controlBackgroundColor))
+            .focused($isDirectoryFocused)
+            .background(
+                Color(NSColor.controlBackgroundColor)
+                    .opacity(focusedPane == .directory ? 1.0 : 0.8)
+            )
             
             // Right Panel - Preview Area
             VStack {
@@ -48,8 +35,19 @@ struct ContentView: View {
             }
             .frame(minWidth: 400)
             .background(Color(NSColor.textBackgroundColor))
+            .focused($isPreviewFocused)
         }
         .frame(minWidth: 1000, minHeight: 700)
+        .onChange(of: isDirectoryFocused) { newValue in
+            if newValue {
+                focusedPane = .directory
+            }
+        }
+        .onChange(of: isPreviewFocused) { newValue in
+            if newValue {
+                focusedPane = .preview
+            }
+        }
         .onAppear {
             // Load home directory on startup
             Task {
