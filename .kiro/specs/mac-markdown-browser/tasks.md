@@ -47,8 +47,8 @@
     - Write unit tests for view model logic
     - _Requirements: 5.2, 5.3, 5.4_
 
-- [ ] 4. Favorites Management System
-  - [ ] 4.1 Implement FavoritesViewModel for bookmark management
+- [x] 4. Favorites Management System
+  - [x] 4.1 Implement FavoritesViewModel for bookmark management
     - Create FavoritesViewModel with favorite directories management
     - Add drag-and-drop support for adding favorites
     - Implement keyboard shortcuts (Cmd+1-9) for quick access
@@ -56,7 +56,7 @@
     - Write unit tests for favorites functionality
     - _Requirements: 4.1, 4.2, 4.3, 4.5_
 
-  - [ ] 4.2 Create FavoritesSection UI component
+  - [x] 4.2 Create FavoritesSection UI component
     - Implement SwiftUI view for favorites display
     - Add drag-and-drop visual feedback and handling
     - Include context menu with management options
