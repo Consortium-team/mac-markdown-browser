@@ -110,9 +110,14 @@ class FavoritesViewModel: ObservableObject {
     ///   - urls: URLs being dropped
     ///   - index: Optional index to insert at
     func handleDrop(of urls: [URL], at index: Int? = nil) {
+        print("handleDrop called with \(urls.count) URLs")
         for url in urls {
+            print("Checking URL: \(url)")
             if canAcceptURL(url) {
+                print("URL is acceptable, adding to favorites")
                 addFavorite(url)
+            } else {
+                print("URL is not acceptable")
             }
         }
     }

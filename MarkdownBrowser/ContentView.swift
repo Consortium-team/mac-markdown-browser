@@ -28,10 +28,16 @@ struct ContentView: View {
             
             // Right Panel - Preview Area
             VStack {
-                Text("Preview Panel")
-                    .font(.title2)
-                    .foregroundColor(.secondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                if let selectedNode = fileSystemVM.selectedNode, !selectedNode.isDirectory {
+                    // Show file content
+                    FilePreviewView(fileURL: selectedNode.url)
+                        .id(selectedNode.id) // Force new view instance for each file
+                } else {
+                    Text("Select a file to preview")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
             }
             .frame(minWidth: 400)
             .background(Color(NSColor.textBackgroundColor))
@@ -53,25 +59,6 @@ struct ContentView: View {
             Task {
                 let homeDirectory = FileManager.default.homeDirectoryForCurrentUser
                 await fileSystemVM.navigateToDirectory(homeDirectory)
-                
-                // Add default favorites if they don't exist
-                let defaultFavorites: [(path: String, name: String)] = [
-                    ("", "Home"),
-                    ("ConsortiumTeam_ClientFiles", "Client Files"),
-                    ("Downloads", "Downloads"),
-                    ("dev", "Development")
-                ]
-                
-                for (path, name) in defaultFavorites {
-                    let url = path.isEmpty ? homeDirectory : homeDirectory.appendingPathComponent(path)
-                    if !favoritesVM.favorites.contains(where: { $0.url == url }) {
-                        // Check if the directory exists before adding
-                        var isDirectory: ObjCBool = false
-                        if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) && isDirectory.boolValue {
-                            favoritesVM.addFavorite(url, name: name)
-                        }
-                    }
-                }
             }
         }
     }

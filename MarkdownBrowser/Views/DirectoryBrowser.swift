@@ -70,7 +70,7 @@ struct DirectoryNodeView: View {
     @ObservedObject var node: DirectoryNode
     @ObservedObject var fileSystemVM: FileSystemViewModel
     let searchQuery: String
-    let indentLevel: Int = 0
+    @Environment(\.indentLevel) var indentLevel: Int
     
     private var shouldShow: Bool {
         searchQuery.isEmpty || node.name.localizedCaseInsensitiveContains(searchQuery)
@@ -147,6 +147,14 @@ struct DirectoryNodeView: View {
                         Task {
                             await node.toggleExpanded()
                         }
+                    }
+                }
+                .onDrag {
+                    // Only allow dragging directories
+                    if node.isDirectory {
+                        return NSItemProvider(object: node.url as NSURL)
+                    } else {
+                        return NSItemProvider()
                     }
                 }
                 .contextMenu {

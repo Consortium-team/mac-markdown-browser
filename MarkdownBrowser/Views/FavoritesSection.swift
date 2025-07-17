@@ -289,24 +289,25 @@ struct FavoritesDropDelegate: DropDelegate {
         favoritesVM.setDraggingOver(false)
         dropTargetIndex = nil
         
-        let providers = info.itemProviders(for: [.fileURL])
-        var urls: [URL] = []
+        print("performDrop called")
         
-        let group = DispatchGroup()
+        let providers = info.itemProviders(for: [.fileURL])
+        print("Number of providers: \(providers.count)")
+        
+        var handled = false
         
         for provider in providers {
-            group.enter()
-            provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, error in
-                if let data = item as? Data,
-                   let url = URL(dataRepresentation: data, relativeTo: nil) {
-                    urls.append(url)
+            _ = provider.loadObject(ofClass: URL.self) { url, error in
+                if let url = url {
+                    print("Dropped URL: \(url)")
+                    DispatchQueue.main.async {
+                        self.favoritesVM.handleDrop(of: [url])
+                    }
+                    handled = true
+                } else if let error = error {
+                    print("Error loading URL: \(error)")
                 }
-                group.leave()
             }
-        }
-        
-        group.notify(queue: .main) {
-            favoritesVM.handleDrop(of: urls)
         }
         
         return true

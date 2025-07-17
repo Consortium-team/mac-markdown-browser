@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Use the mcp server Context7 when you need information about an api or package
 - Implement the step, check complete in tasks.md when working for each sub-step (2.1, 2.2, etc)
 - After each major step is complete (1,2,3, etc.), launch the app and way for human review feedback
-- If human accepts, check the major step complete, commit that step in git and push, and then wait for next instruction
+- If human accepts, check the major step complete, commit that step in git and push, and then wait for next instruction.  The co-author should be me: Sonjaya Tandon, sonjayatandon@gmail.com
 
 ## Build and Development Commands
 

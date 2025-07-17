@@ -12,7 +12,7 @@ class FileSystemViewModel: ObservableObject {
     @Published var expandedNodes: Set<UUID> = []
     @Published var searchText: String = ""
     @Published var showAllFiles: Bool = false
-    @Published var showOnlyMarkdownFiles: Bool = true
+    @Published var showOnlyMarkdownFiles: Bool = false
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     
