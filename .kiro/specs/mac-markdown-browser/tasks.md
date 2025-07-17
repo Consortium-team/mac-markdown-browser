@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Project Setup and Infrastructure
+- [-] 1. Project Setup and Infrastructure
   - Initialize Xcode project with SwiftUI macOS target (macOS 13.0+)
   - Configure project structure with proper folder organization
   - Set up Package.swift with required dependencies (Down, Swift Markdown)
