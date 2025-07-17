@@ -54,6 +54,10 @@
 			children = (
 				A1000002000000000000001 /* MarkdownBrowserApp.swift */,
 				A1000004000000000000001 /* ContentView.swift */,
+				A1000026000000000000001 /* Models */,
+				A1000027000000000000001 /* ViewModels */,
+				A1000028000000000000001 /* Views */,
+				A1000029000000000000001 /* Services */,
 				A1000006000000000000001 /* Assets.xcassets */,
 				A1000010000000000000001 /* MarkdownBrowser.entitlements */,
 				A1000015000000000000001 /* Preview Content */,
@@ -67,6 +71,34 @@
 				A1000008000000000000001 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		A1000026000000000000001 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A1000027000000000000001 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		A1000028000000000000001 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A1000029000000000000001 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Services;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [-] 1. Project Setup and Infrastructure
+- [X] 1. Project Setup and Infrastructure
   - Initialize Xcode project with SwiftUI macOS target (macOS 13.0+)
   - Configure project structure with proper folder organization
   - Set up Package.swift with required dependencies (Down, Swift Markdown)
@@ -8,30 +8,30 @@
   - Set up documentation structure (/docs with requirements, feedback, planning, development folders)
   - _Requirements: 7.1, 7.3_
 
-- [ ] 2. Core Data Models and Foundation
-  - [ ] 2.1 Create DirectoryNode model with file system representation
+- [x] 2. Core Data Models and Foundation
+  - [x] 2.1 Create DirectoryNode model with file system representation
     - Implement DirectoryNode class with URL, name, isDirectory properties
     - Add children array and isExpanded state for tree navigation
     - Include lazy loading capabilities for performance
     - Write unit tests for DirectoryNode functionality
     - _Requirements: 5.1, 5.2, 6.2_
 
-  - [ ] 2.2 Create MarkdownDocument model for content management
+  - [x] 2.2 Create MarkdownDocument model for content management
     - Implement MarkdownDocument class with content, renderedHTML, and change tracking
     - Add file loading and saving capabilities
     - Include lastModified date tracking
     - Write unit tests for document operations
     - _Requirements: 2.1, 9.7, 10.1_
 
-  - [ ] 2.3 Create UserPreferences model for application settings
+  - [x] 2.3 Create UserPreferences model for application settings
     - Implement UserPreferences class with favorite directories, theme, and window state
     - Add persistent storage using UserDefaults
     - Include security-scoped bookmarks for directory access
     - Write unit tests for preferences management
     - _Requirements: 4.4, 8.1, 8.3_
 
-- [ ] 3. File System Services and Navigation
-  - [ ] 3.1 Implement FileSystemService for file operations
+- [x] 3. File System Services and Navigation
+  - [x] 3.1 Implement FileSystemService for file operations
     - Create FileSystemService class with NSFileManager integration
     - Add directory loading with lazy loading support
     - Implement FSEvents monitoring for real-time file system changes
@@ -39,7 +39,7 @@
     - Write unit tests for file system operations
     - _Requirements: 5.1, 5.5, 6.3, 7.4_
 
-  - [ ] 3.2 Create FileSystemViewModel for directory navigation
+  - [x] 3.2 Create FileSystemViewModel for directory navigation
     - Implement FileSystemViewModel with ObservableObject protocol
     - Add directory tree state management and navigation logic
     - Include file filtering (.md files by default) and search functionality

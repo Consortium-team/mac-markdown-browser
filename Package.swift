@@ -15,20 +15,21 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-markdown.git", from: "0.3.0"),
-        .package(url: "https://github.com/johnxnguyen/Down.git", from: "0.11.0")
+        .package(url: "https://github.com/apple/swift-markdown.git", from: "0.3.0")
     ],
     targets: [
         .executableTarget(
             name: "MarkdownBrowser",
             dependencies: [
-                .product(name: "Markdown", package: "swift-markdown"),
-                "Down"
-            ]
+                .product(name: "Markdown", package: "swift-markdown")
+            ],
+            path: "MarkdownBrowser",
+            exclude: ["Assets.xcassets", "Preview Content", "MarkdownBrowser.entitlements"]
         ),
         .testTarget(
             name: "MarkdownBrowserTests",
-            dependencies: ["MarkdownBrowser"]
+            dependencies: ["MarkdownBrowser"],
+            path: "MarkdownBrowserTests"
         ),
     ]
 )
