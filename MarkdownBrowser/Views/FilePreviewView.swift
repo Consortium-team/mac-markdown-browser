@@ -3,9 +3,12 @@ import SwiftUI
 struct FilePreviewView: View {
     let fileURL: URL
     @State private var fileContent: String = ""
+    @State private var htmlContent: String = ""
     @State private var isLoading = true
     @State private var error: Error?
     @State private var loadedURL: URL?
+    
+    private let markdownService = MarkdownService()
     
     var body: some View {
         VStack(spacing: 0) {
@@ -41,7 +44,11 @@ struct FilePreviewView: View {
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if fileURL.pathExtension.lowercased() == "md" {
+                // Render markdown as HTML
+                MarkdownPreviewView(htmlContent: htmlContent)
             } else {
+                // Show raw text for non-markdown files
                 ScrollView {
                     Text(fileContent)
                         .font(.system(.body, design: .monospaced))
@@ -71,11 +78,27 @@ struct FilePreviewView: View {
         Task {
             do {
                 let content = try String(contentsOf: fileURL, encoding: .utf8)
-                await MainActor.run {
-                    // Only update if this is still the current file
-                    if self.loadedURL == fileURL {
-                        self.fileContent = content
-                        self.isLoading = false
+                
+                // If it's a markdown file, parse and render it
+                if fileURL.pathExtension.lowercased() == "md" {
+                    let parsed = try await markdownService.parseMarkdown(content)
+                    let html = await markdownService.renderToHTML(parsed)
+                    
+                    await MainActor.run {
+                        // Only update if this is still the current file
+                        if self.loadedURL == fileURL {
+                            self.fileContent = content
+                            self.htmlContent = html
+                            self.isLoading = false
+                        }
+                    }
+                } else {
+                    await MainActor.run {
+                        // Only update if this is still the current file
+                        if self.loadedURL == fileURL {
+                            self.fileContent = content
+                            self.isLoading = false
+                        }
                     }
                 }
             } catch {
