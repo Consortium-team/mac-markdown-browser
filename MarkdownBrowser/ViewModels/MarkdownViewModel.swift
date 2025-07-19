@@ -32,7 +32,7 @@ class MarkdownViewModel: ObservableObject {
     
     // MARK: - Public Methods
     
-    /// Loads and renders a Markdown document
+    /// Loads and renders a Markdown or HTML document
     func loadDocument(at url: URL) async {
         // Cancel any existing render task
         renderTask?.cancel()
@@ -164,29 +164,42 @@ class MarkdownViewModel: ObservableObject {
         renderStartTime = Date()
         
         do {
-            // Parse and render Markdown
-            let parsed = try await markdownService.parseMarkdown(document.content)
-            var html = await markdownService.renderToHTML(parsed)
+            var html: String
+            var blocks: [MermaidBlock] = []
             
-            // Debug: Log Mermaid blocks found
-            print("Found \(parsed.mermaidBlocks.count) Mermaid blocks")
-            for (index, block) in parsed.mermaidBlocks.enumerated() {
-                print("Mermaid block \(index): \(block.code.prefix(50))...")
+            // Check if it's an HTML file
+            if document.url.isHTMLFile {
+                // For HTML files, use the content directly
+                html = document.content
+                // HTML files don't have Mermaid blocks parsed from markdown
+                blocks = []
+            } else {
+                // Parse and render Markdown
+                let parsed = try await markdownService.parseMarkdown(document.content)
+                html = await markdownService.renderToHTML(parsed)
+                blocks = parsed.mermaidBlocks
+                
+                // Debug: Log Mermaid blocks found
+                print("Found \(parsed.mermaidBlocks.count) Mermaid blocks")
+                for (index, block) in parsed.mermaidBlocks.enumerated() {
+                    print("Mermaid block \(index): \(block.code.prefix(50))...")
+                }
+                
+                // Wrap HTML with Mermaid support if needed
+                html = MermaidHTMLGenerator.wrapHTMLWithMermaid(html, mermaidBlocks: parsed.mermaidBlocks)
             }
-            
-            // Wrap HTML with Mermaid support if needed
-            html = MermaidHTMLGenerator.wrapHTMLWithMermaid(html, mermaidBlocks: parsed.mermaidBlocks)
             
             // Update UI
             renderedHTML = html
-            mermaidBlocks = parsed.mermaidBlocks
+            mermaidBlocks = blocks
             
             // Cache the rendered content
-            cacheContent(for: document.url, document: document, html: html, mermaidBlocks: parsed.mermaidBlocks)
+            cacheContent(for: document.url, document: document, html: html, mermaidBlocks: blocks)
             
             // Log performance
             if let renderTime = lastRenderTime {
-                print("Markdown rendered in \(String(format: "%.2f", renderTime * 1000))ms")
+                let fileType = document.url.isHTMLFile ? "HTML" : "Markdown"
+                print("\(fileType) rendered in \(String(format: "%.2f", renderTime * 1000))ms")
             }
             
         } catch {

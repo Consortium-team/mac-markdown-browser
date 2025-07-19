@@ -7,6 +7,7 @@ class DirectoryNode: ObservableObject, Identifiable {
     let url: URL
     let name: String
     let isDirectory: Bool
+    let fileType: FileType
     
     @Published var children: [DirectoryNode] = []
     @Published var isExpanded = false
@@ -17,6 +18,7 @@ class DirectoryNode: ObservableObject, Identifiable {
     init(url: URL) {
         self.url = url
         self.name = url.lastPathComponent
+        self.fileType = FileType(from: url)
         
         var isDir: ObjCBool = false
         FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
@@ -66,11 +68,16 @@ class DirectoryNode: ObservableObject, Identifiable {
         isExpanded.toggle()
     }
     
-    /// Filters children to show only Markdown files and directories
-    var markdownFilteredChildren: [DirectoryNode] {
+    /// Filters children to show only supported document files and directories
+    var supportedDocumentFilteredChildren: [DirectoryNode] {
         children.filter { node in
-            node.isDirectory || node.url.pathExtension.lowercased() == "md"
+            node.isDirectory || node.fileType.isSupported
         }
+    }
+    
+    /// Legacy property for backward compatibility
+    var markdownFilteredChildren: [DirectoryNode] {
+        supportedDocumentFilteredChildren
     }
     
     /// Searches for nodes matching the given query

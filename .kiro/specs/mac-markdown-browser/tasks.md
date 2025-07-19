@@ -151,7 +151,7 @@
   - [X] 9.3 Fix the critical issues identified in current-features.md
 
 - [ ] 10. HTML Document Rendering Support
-  - [ ] 10.1 Extend file type support to include HTML files
+  - [x] 10.1 Extend file type support to include HTML files
     - Update FileSystemViewModel to recognize .html and .htm files
     - Add HTML file icons and visual indicators in directory browser
     - Modify file filtering to include HTML files alongside Markdown
@@ -159,7 +159,7 @@
     - Write unit tests for HTML file detection
     - _Requirements: 5.2, 5.3_
 
-  - [ ] 10.2 Implement HTML preview functionality
+  - [x] 10.2 Implement HTML preview functionality
     - Create HTMLPreviewView component using WKWebView
     - Add security sandboxing for safe HTML rendering
     - Implement local resource loading (CSS, images, JavaScript)

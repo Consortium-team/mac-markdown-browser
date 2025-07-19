@@ -8,6 +8,7 @@ final class DirectoryNodeTests: XCTestCase {
     var testDirectory: URL!
     var testFile: URL!
     var testMarkdownFile: URL!
+    var testHTMLFile: URL!
     
     override func setUp() async throws {
         try await super.setUp()
@@ -27,9 +28,16 @@ final class DirectoryNodeTests: XCTestCase {
         testMarkdownFile = tempDirectory.appendingPathComponent("test.md")
         try "# Test Markdown".write(to: testMarkdownFile, atomically: true, encoding: .utf8)
         
+        testHTMLFile = tempDirectory.appendingPathComponent("test.html")
+        try "<h1>Test HTML</h1>".write(to: testHTMLFile, atomically: true, encoding: .utf8)
+        
         // Create markdown file in subdirectory
         let subMarkdownFile = testDirectory.appendingPathComponent("sub.md")
         try "## Sub Markdown".write(to: subMarkdownFile, atomically: true, encoding: .utf8)
+        
+        // Create HTML file in subdirectory
+        let subHTMLFile = testDirectory.appendingPathComponent("sub.html")
+        try "<h2>Sub HTML</h2>".write(to: subHTMLFile, atomically: true, encoding: .utf8)
     }
     
     override func tearDown() async throws {
@@ -67,7 +75,7 @@ final class DirectoryNodeTests: XCTestCase {
         await dirNode.loadChildren()
         
         XCTAssertFalse(dirNode.children.isEmpty)
-        XCTAssertTrue(dirNode.children.count >= 3) // TestDir, test.txt, test.md
+        XCTAssertTrue(dirNode.children.count >= 4) // TestDir, test.txt, test.md, test.html
         
         // Verify children are sorted (directories first, then alphabetically)
         _ = dirNode.children.map { $0.name }
@@ -77,6 +85,7 @@ final class DirectoryNodeTests: XCTestCase {
         XCTAssertTrue(directories.contains("TestDir"))
         XCTAssertTrue(files.contains("test.txt"))
         XCTAssertTrue(files.contains("test.md"))
+        XCTAssertTrue(files.contains("test.html"))
     }
     
     func testToggleExpanded() async {
@@ -108,6 +117,19 @@ final class DirectoryNodeTests: XCTestCase {
         XCTAssertFalse(filteredNames.contains("test.txt")) // Non-markdown file should be excluded
     }
     
+    func testSupportedDocumentFilteredChildren() async {
+        let dirNode = DirectoryNode(url: tempDirectory)
+        await dirNode.loadChildren()
+        
+        let filteredChildren = dirNode.supportedDocumentFilteredChildren
+        let filteredNames = filteredChildren.map { $0.name }
+        
+        XCTAssertTrue(filteredNames.contains("TestDir")) // Directory should be included
+        XCTAssertTrue(filteredNames.contains("test.md")) // Markdown file should be included
+        XCTAssertTrue(filteredNames.contains("test.html")) // HTML file should be included
+        XCTAssertFalse(filteredNames.contains("test.txt")) // Non-supported file should be excluded
+    }
+    
     func testSearch() async {
         let dirNode = DirectoryNode(url: tempDirectory)
         await dirNode.loadChildren()
@@ -122,6 +144,7 @@ final class DirectoryNodeTests: XCTestCase {
         
         XCTAssertTrue(resultNames.contains("test.txt"))
         XCTAssertTrue(resultNames.contains("test.md"))
+        XCTAssertTrue(resultNames.contains("test.html"))
     }
     
     func testFindChild() async {

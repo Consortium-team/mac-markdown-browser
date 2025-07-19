@@ -79,6 +79,8 @@ struct DirectoryNodeView: View {
     private var filteredChildren: [DirectoryNode] {
         if fileSystemVM.showOnlyMarkdownFiles {
             return node.markdownFilteredChildren
+        } else if fileSystemVM.fileFilter == .supportedDocuments {
+            return node.supportedDocumentFilteredChildren
         }
         return node.children
     }
@@ -113,7 +115,7 @@ struct DirectoryNodeView: View {
                     }
                     
                     // Icon
-                    Image(systemName: node.isDirectory ? "folder" : "doc.text")
+                    Image(systemName: node.fileType.iconName)
                         .font(.system(size: 12))
                         .foregroundColor(node.isDirectory ? .accentColor : .secondary)
                     
@@ -202,7 +204,14 @@ struct DirectoryNodeView: View {
     }
     
     private func hasMatchingChildrenRecursive(_ node: DirectoryNode) -> Bool {
-        let children = fileSystemVM.showOnlyMarkdownFiles ? node.markdownFilteredChildren : node.children
+        let children: [DirectoryNode]
+        if fileSystemVM.showOnlyMarkdownFiles {
+            children = node.markdownFilteredChildren
+        } else if fileSystemVM.fileFilter == .supportedDocuments {
+            children = node.supportedDocumentFilteredChildren
+        } else {
+            children = node.children
+        }
         return children.contains { child in
             child.name.localizedCaseInsensitiveContains(searchQuery) ||
             (child.isDirectory && hasMatchingChildrenRecursive(child))

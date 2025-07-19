@@ -65,6 +65,20 @@ This document describes the current state of implemented features in MarkdownBro
 - Not integrated into ProperMarkdownEditor
 - Would sync scroll position between editor and preview panes
 
+#### 5. HTML Document Support
+- Browse and preview HTML files (.html, .htm extensions)
+- Distinct file icons:
+  - Markdown files: "doc.text" SF Symbol
+  - HTML files: "doc.richtext" SF Symbol
+- Direct HTML rendering without parsing
+- CSS and inline styles are preserved
+- JavaScript execution supported by WKWebView
+- Unified file type system with FileType enum
+- File filtering supports:
+  - All files mode
+  - Markdown only mode
+  - Supported documents mode (Markdown + HTML)
+
 ### ❌ Not Implemented Features
 
 #### 1. Search Functionality

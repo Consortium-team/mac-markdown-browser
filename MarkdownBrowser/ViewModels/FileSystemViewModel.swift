@@ -26,7 +26,13 @@ class FileSystemViewModel: ObservableObject {
     // MARK: - Computed Properties
     
     var fileFilter: FileFilter {
-        showAllFiles ? .allFiles : .markdownOnly
+        if showAllFiles {
+            return .allFiles
+        } else if showOnlyMarkdownFiles {
+            return .markdownOnly
+        } else {
+            return .supportedDocuments
+        }
     }
     
     var filteredNodes: [DirectoryNode] {
@@ -209,7 +215,7 @@ class FileSystemViewModel: ObservableObject {
             var result: [DirectoryNode] = []
             
             // Check if node matches filter
-            if node.isDirectory || (fileFilter == .allFiles || node.isMarkdownFile) {
+            if node.isDirectory || matchesFilter(node) {
                 result.append(node)
             }
             
@@ -230,7 +236,7 @@ class FileSystemViewModel: ObservableObject {
             
             // Check if node name contains search text
             if node.name.lowercased().contains(lowercasedSearch) {
-                if node.isDirectory || (fileFilter == .allFiles || node.isMarkdownFile) {
+                if node.isDirectory || matchesFilter(node) {
                     result.append(node)
                 }
             }
@@ -314,8 +320,9 @@ enum KeyboardNavigationDirection {
 }
 
 enum FileFilter {
-    case markdownOnly
-    case allFiles
+    case supportedDocuments  // Markdown and HTML files
+    case markdownOnly       // Legacy: only Markdown files
+    case allFiles          // All files
 }
 
 // MARK: - DirectoryNode Extensions
@@ -323,6 +330,31 @@ enum FileFilter {
 extension DirectoryNode {
     var isMarkdownFile: Bool {
         guard !isDirectory else { return false }
-        return url.pathExtension.lowercased() == "md"
+        return url.isMarkdownFile
+    }
+    
+    var isHTMLFile: Bool {
+        guard !isDirectory else { return false }
+        return url.isHTMLFile
+    }
+    
+    var isSupportedDocument: Bool {
+        guard !isDirectory else { return false }
+        return url.isSupportedDocument
+    }
+}
+
+// MARK: - Private Extensions
+
+private extension FileSystemViewModel {
+    func matchesFilter(_ node: DirectoryNode) -> Bool {
+        switch fileFilter {
+        case .allFiles:
+            return true
+        case .markdownOnly:
+            return node.isMarkdownFile
+        case .supportedDocuments:
+            return node.isSupportedDocument
+        }
     }
 }

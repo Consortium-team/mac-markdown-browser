@@ -127,13 +127,17 @@ classDiagram
         +loadDocument(at: URL)
         +updateContent(String)
         +saveCurrentDocument()
+        +renderDocument(MarkdownDocument)
+        -detectsHTMLFiles()
     }
     
     class FileSystemViewModel {
         +DirectoryNode? rootNode
         +DirectoryNode? selectedNode
+        +FileFilter fileFilter
         +navigateToDirectory(URL)
         +refreshDirectory()
+        +matchesFilter(DirectoryNode)
     }
 ```
 
@@ -240,12 +244,44 @@ graph TD
     end
 ```
 
+## File Type Support
+
+The application now supports multiple document types through a unified type system:
+
+```mermaid
+classDiagram
+    class FileType {
+        <<enumeration>>
+        +markdown
+        +html
+        +directory
+        +other
+        +init(from: URL)
+        +iconName: String
+        +isSupported: Bool
+    }
+    
+    class URL {
+        +fileType: FileType
+        +isMarkdownFile: Bool
+        +isHTMLFile: Bool
+        +isSupportedDocument: Bool
+    }
+    
+    FileType --> URL : extends
+```
+
+### Supported Document Types
+- **Markdown**: `.md`, `.markdown` - Parsed and rendered with GitHub-style CSS
+- **HTML**: `.html`, `.htm` - Rendered directly in WKWebView
+
 ## Technology Stack
 
 - **UI Framework**: SwiftUI
 - **Text Editing**: NSTextView (AppKit)
 - **Web Preview**: WKWebView (WebKit)
 - **Markdown Parsing**: swift-markdown (Apple)
+- **HTML Rendering**: Direct WKWebView display
 - **Reactive Programming**: Combine
 - **Concurrency**: Swift async/await
 - **File System**: FSEvents API

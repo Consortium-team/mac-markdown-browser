@@ -11,7 +11,7 @@ struct FilePreviewView: View {
         VStack(spacing: 0) {
             // File header with edit controls
             HStack {
-                Image(systemName: "doc.text")
+                Image(systemName: fileURL.fileType.iconName)
                     .foregroundColor(.secondary)
                 Text(fileURL.lastPathComponent)
                     .font(.headline)
@@ -27,7 +27,7 @@ struct FilePreviewView: View {
                 Spacer()
                 
                 // Edit mode toggle for markdown files
-                if fileURL.pathExtension.lowercased() == "md" {
+                if fileURL.isMarkdownFile {
                     // Use window instead of sheet
                     EditWindowButton(fileURL: fileURL)
                 }
@@ -54,7 +54,8 @@ struct FilePreviewView: View {
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if fileURL.pathExtension.lowercased() == "md" {
+            } else if fileURL.isSupportedDocument {
+                // Preview for supported documents (Markdown and HTML)
                 MarkdownPreviewView(htmlContent: viewModel.renderedHTML)
             } else {
                 // Show raw text for non-markdown files

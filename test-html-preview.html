@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test HTML File</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        .highlight {
+            background-color: #ffd700;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .info-box {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 16px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>HTML Preview Test</h1>
+    
+    <p>This is a test HTML file to verify that <span class="highlight">HTML rendering</span> is working correctly in MarkdownBrowser.</p>
+    
+    <div class="info-box">
+        <h2>Features Supported</h2>
+        <ul>
+            <li>HTML file detection (.html and .htm extensions)</li>
+            <li>Direct HTML rendering in preview pane</li>
+            <li>CSS styling support</li>
+            <li>JavaScript execution (if enabled)</li>
+        </ul>
+    </div>
+    
+    <h2>Sample Content</h2>
+    <p>Here's some formatted content with <strong>bold text</strong>, <em>italic text</em>, and <code>inline code</code>.</p>
+    
+    <h3>Code Example</h3>
+    <pre><code>function greet(name) {
+    return `Hello, ${name}!`;
+}
+
+console.log(greet('MarkdownBrowser'));</code></pre>
+    
+    <h3>Table Example</h3>
+    <table border="1" style="border-collapse: collapse; width: 100%;">
+        <tr>
+            <th style="padding: 8px;">Feature</th>
+            <th style="padding: 8px;">Status</th>
+        </tr>
+        <tr>
+            <td style="padding: 8px;">Markdown Support</td>
+            <td style="padding: 8px;">✅ Complete</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px;">HTML Support</td>
+            <td style="padding: 8px;">✅ Complete</td>
+        </tr>
+        <tr>
+            <td style="padding: 8px;">Mermaid Diagrams</td>
+            <td style="padding: 8px;">⚠️ In Progress</td>
+        </tr>
+    </table>
+</body>
+</html>
