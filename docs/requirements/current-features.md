@@ -35,28 +35,23 @@ This document describes the current state of implemented features in MarkdownBro
 - Dark mode support
 - Responsive layout
 
-#### 4. Basic Markdown Editing
-- Open markdown files in edit mode
+#### 4. Markdown Editing ✅
+- Open markdown files in separate edit windows
 - Split-pane interface with editor and preview
 - Live preview updates (with 300ms debounce)
-- Syntax highlighting (basic monospace font)
-- Edit window management (separate windows per file)
+- Basic text editing with monospace font
+- Proper window management following Apple HIG
+- Save functionality with Cmd+S keyboard shortcut
+- Auto-save after 2 seconds of inactivity
+- Unsaved changes indicators:
+  - "— Edited" text in status bar
+  - Dot in window close button (macOS standard)
+- Undo/Redo support
+- Preview in main window updates automatically after save
 
 ### ⚠️ Partially Implemented Features
 
-#### 1. Markdown Editing Capabilities
-**Working:**
-- Text input and editing
-- Real-time preview updates
-- Window management
-- Keyboard shortcuts for close (ESC)
-
-**Not Working:**
-- **Save functionality crashes the application** ❌
-- Save keyboard shortcut (Cmd+S) causes crash
-- No auto-save functionality
-
-#### 2. Mermaid Diagram Support
+#### 1. Mermaid Diagram Support
 **Implemented but not rendering:**
 - Mermaid block detection in markdown
 - HTML generation for mermaid diagrams
@@ -95,26 +90,13 @@ This document describes the current state of implemented features in MarkdownBro
 
 ## Known Issues
 
-### Critical Issues
-
-1. **Save Crash** 🔴
-   - **Description**: Attempting to save an edited markdown file crashes the application
-   - **Steps to Reproduce**:
-     1. Open a markdown file
-     2. Click Edit button
-     3. Make changes to the content
-     4. Press Cmd+S or click Save button
-     5. Application crashes
-   - **Impact**: High - Makes editing functionality unusable for practical purposes
-   - **Workaround**: None
-
 ### Minor Issues
 
-2. **Mermaid Diagrams Not Rendering**
+1. **Mermaid Diagrams Not Rendering**
    - **Description**: Mermaid code blocks are detected but not rendered as diagrams in the edit preview pane
    - **Impact**: Medium - Feature exists but is non-functional
 
-3. **No Scroll Synchronization**
+2. **No Scroll Synchronization**
    - **Description**: Editor and preview panes scroll independently
    - **Impact**: Low - Usability issue for long documents
 

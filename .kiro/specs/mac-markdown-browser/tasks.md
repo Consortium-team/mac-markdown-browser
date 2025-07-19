@@ -150,8 +150,49 @@
     - _Requirements: 9.1, 9.3, 9.5, 9.6, 9.8_
   - [X] 9.3 Fix the critical issues identified in current-features.md
 
-- [ ] 10. Enhanced User Interface and Interactions
-  - [ ] 10.1 Implement comprehensive keyboard shortcuts
+- [ ] 10. HTML Document Rendering Support
+  - [ ] 10.1 Extend file type support to include HTML files
+    - Update FileSystemViewModel to recognize .html and .htm files
+    - Add HTML file icons and visual indicators in directory browser
+    - Modify file filtering to include HTML files alongside Markdown
+    - Update DirectoryNode to properly identify HTML files
+    - Write unit tests for HTML file detection
+    - _Requirements: 5.2, 5.3_
+
+  - [ ] 10.2 Implement HTML preview functionality
+    - Create HTMLPreviewView component using WKWebView
+    - Add security sandboxing for safe HTML rendering
+    - Implement local resource loading (CSS, images, JavaScript)
+    - Add base URL support for relative links
+    - Write UI tests for HTML preview functionality
+    - _Requirements: 2.1, 7.2_
+
+  - [ ] 10.3 Create unified preview system for Markdown and HTML
+    - Refactor FilePreviewView to support multiple file types
+    - Implement file type detection and appropriate renderer selection
+    - Ensure consistent UI between Markdown and HTML previews
+    - Add smooth transitions when switching between file types
+    - Write integration tests for unified preview system
+    - _Requirements: 1.1, 2.1_
+
+  - [ ] 10.4 Add HTML-specific features
+    - Implement zoom controls for HTML content
+    - Add print support for HTML documents
+    - Include view source option for HTML files
+    - Add developer tools access (optional, for debugging)
+    - Write UI tests for HTML-specific features
+    - _Requirements: 7.2, 8.2_
+
+  - [ ] 10.5 Ensure performance and security
+    - Implement content security policies for HTML rendering
+    - Add performance optimizations for large HTML files
+    - Include error handling for malformed HTML
+    - Test with various HTML5 features and edge cases
+    - Write security and performance tests
+    - _Requirements: 6.1, 10.1, 10.2_
+
+- [ ] 11. Enhanced User Interface and Interactions
+  - [ ] 11.1 Implement comprehensive keyboard shortcuts
     - Add keyboard shortcuts for all major functions
     - Include focus management and navigation shortcuts
     - Implement favorites quick access (Cmd+1-9)
@@ -159,7 +200,7 @@
     - Write UI tests for keyboard interaction workflows
     - _Requirements: 1.3, 4.5, 7.3, 9.1_
 
-  - [ ] 10.2 Create PreferencesView for application settings
+  - [ ] 11.2 Create PreferencesView for application settings
     - Implement PreferencesView with all configurable options
     - Add file filtering preferences and theme selection
     - Include keyboard shortcut customization
@@ -167,8 +208,8 @@
     - Write UI tests for preferences functionality
     - _Requirements: 8.1, 8.2, 8.4_
 
-- [ ] 11. Performance Optimization and Caching
-  - [ ] 11.1 Implement intelligent caching system
+- [ ] 12. Performance Optimization and Caching
+  - [ ] 12.1 Implement intelligent caching system
     - Add rendered content caching for frequently accessed files
     - Implement memory management with automatic cleanup
     - Include background processing for file operations
@@ -176,7 +217,7 @@
     - Write performance tests for caching effectiveness
     - _Requirements: 6.1, 6.3, 6.4_
 
-  - [ ] 11.2 Optimize file system operations
+  - [ ] 12.2 Optimize file system operations
     - Implement lazy loading for large directory structures
     - Add background queues for file operations
     - Include progress indicators for long-running operations
@@ -184,8 +225,8 @@
     - Write performance tests for file system operations
     - _Requirements: 6.2, 6.5, 10.5_
 
-- [ ] 12. Error Handling and Reliability
-  - [ ] 12.1 Implement comprehensive error handling
+- [ ] 13. Error Handling and Reliability
+  - [ ] 13.1 Implement comprehensive error handling
     - Add error handling for all file system operations
     - Implement graceful degradation for parsing failures
     - Include user-friendly error messages and recovery options
@@ -193,7 +234,7 @@
     - Write unit tests for error scenarios
     - _Requirements: 10.1, 10.2, 10.3, 10.4_
 
-  - [ ] 12.2 Add application stability and recovery features
+  - [ ] 13.2 Add application stability and recovery features
     - Implement crash recovery and state restoration
     - Add automatic backup of unsaved changes
     - Include network timeout handling for remote directories
@@ -201,8 +242,8 @@
     - Write integration tests for stability scenarios
     - _Requirements: 10.5, 9.8_
 
-- [ ] 13. Testing and Quality Assurance
-  - [ ] 13.1 Create comprehensive test suite
+- [ ] 14. Testing and Quality Assurance
+  - [ ] 14.1 Create comprehensive test suite
     - Write unit tests for all models, services, and view models
     - Add integration tests for file system and rendering workflows
     - Include UI tests for all user interactions
@@ -210,7 +251,7 @@
     - Set up continuous integration for automated testing
     - _Requirements: All requirements validation_
 
-  - [ ] 13.2 Conduct user acceptance testing
+  - [ ] 14.2 Conduct user acceptance testing
     - Test with real-world documentation repositories
     - Validate performance targets (100ms file switching, 500ms Mermaid rendering)
     - Verify accessibility compliance and keyboard navigation
@@ -218,15 +259,15 @@
     - Conduct usability testing with target user personas
     - _Requirements: 6.1, 6.4, 7.3_
 
-- [ ] 14. Documentation and Deployment Preparation
-  - [ ] 14.1 Create user documentation
+- [ ] 15. Documentation and Deployment Preparation
+  - [ ] 15.1 Create user documentation
     - Write user guide covering all application features
     - Create keyboard shortcut reference
     - Add troubleshooting guide for common issues
     - Include screenshots and workflow examples
     - _Requirements: User experience optimization_
 
-  - [ ] 14.2 Prepare for distribution
+  - [ ] 15.2 Prepare for distribution
     - Configure code signing for distribution
     - Create installer package (DMG) with proper notarization
     - Set up build automation for release preparation

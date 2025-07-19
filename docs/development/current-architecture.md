@@ -16,8 +16,9 @@ graph TB
     subgraph "View Layer"
         DirectoryPanel[DirectoryPanel]
         FilePreviewView[FilePreviewView]
-        MarkdownEditor[ProperMarkdownEditor]
+        ProperMarkdownEditor[ProperMarkdownEditor]
         EditWindowManager[EditWindowManager]
+        MarkdownPreviewView[MarkdownPreviewView]
     end
     
     subgraph "ViewModels"
@@ -43,13 +44,14 @@ graph TB
     App --> ContentView
     ContentView --> DirectoryPanel
     ContentView --> FilePreviewView
+    FilePreviewView --> MarkdownPreviewView
     FilePreviewView --> EditWindowManager
-    EditWindowManager --> MarkdownEditor
+    EditWindowManager --> ProperMarkdownEditor
     
     DirectoryPanel --> FileSystemVM
     DirectoryPanel --> FavoritesVM
     FilePreviewView --> MarkdownVM
-    MarkdownEditor --> EditorVM
+    ProperMarkdownEditor --> EditorVM
     
     FileSystemVM --> FileSystemService
     FileSystemVM --> DirectoryNode
@@ -106,11 +108,15 @@ classDiagram
     class MarkdownEditorViewModel {
         +String markdownText
         +String htmlContent
-        -Set~AnyCancellable~ cancellables
+        +Bool hasUnsavedChanges
+        +Bool isSaving
+        -String originalText
+        -Timer autoSaveTimer
         -MarkdownService markdownService
         +updatePreview(markdown: String)
         +loadFile(from: URL)
-        +saveFile(to: URL)
+        +saveFile()
+        +scheduleAutoSave()
     }
     
     class MarkdownViewModel {
@@ -185,12 +191,40 @@ sequenceDiagram
     EditorViewModel->>ProperMarkdownEditor: Update preview
 ```
 
+### Window Management
+
+```mermaid
+classDiagram
+    class EditWindowManager {
+        -static EditWindowManager shared
+        -Dictionary~URL,NSWindow~ windows
+        +openEditWindow(URL)
+        +cleanupWindow(URL)
+        +windowWillClose(Notification)
+    }
+    
+    EditWindowManager --|> NSWindowDelegate
+```
+
+### Notification System
+
+The app uses NotificationCenter for cross-component communication:
+- `markdownFileSaved`: Posted when a file is saved in the editor
+  - Contains URL in userInfo dictionary
+  - FilePreviewView listens to reload content
+
+### Keyboard Shortcuts
+
+The app implements Cmd+S using SwiftUI's FocusedValue system:
+- `SaveActionKey`: Custom FocusedValueKey for save action
+- Main app adds File > Save menu item
+- ProperMarkdownEditor provides save action via `.focusedSceneValue`
+
 ### Known Issues
 
 ```mermaid
 graph TD
     subgraph "Current Issues"
-        SaveCrash[Save Function Crashes App]
         ScrollSync[Scroll Sync Not Implemented]
         MermaidPreview[Mermaid Not Rendering in Preview]
     end
@@ -200,6 +234,9 @@ graph TD
         MarkdownEdit[Markdown Editing ✓]
         LivePreview[Live Preview ✓]
         Favorites[Favorites Management ✓]
+        SaveFunction[Save with Cmd+S ✓]
+        AutoSave[Auto-save after 2s ✓]
+        UnsavedIndicator[Unsaved Changes Indicator ✓]
     end
 ```
 
