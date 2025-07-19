@@ -132,7 +132,7 @@
     - Write integration tests for Mermaid workflow
     - _Requirements: 3.1, 3.2, 6.4_
 
-- [ ] 9. Markdown Editing Capabilities
+- [X] 9. Markdown Editing Capabilities
   - [X] 9.1 Create MarkdownEditor component
     - Implement MarkdownEditor SwiftUI view with syntax highlighting
     - Add text editing capabilities with Markdown-specific features
@@ -148,7 +148,7 @@
     - Add unsaved changes prompts when navigating away
     - Write UI tests for mode switching and layout changes
     - _Requirements: 9.1, 9.3, 9.5, 9.6, 9.8_
-  - [ ] 9.3 Fix the critical issues identified in current-features.md
+  - [X] 9.3 Fix the critical issues identified in current-features.md
 
 - [ ] 10. Enhanced User Interface and Interactions
   - [ ] 10.1 Implement comprehensive keyboard shortcuts
