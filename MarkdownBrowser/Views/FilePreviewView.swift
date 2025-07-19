@@ -2,17 +2,13 @@ import SwiftUI
 
 struct FilePreviewView: View {
     let fileURL: URL
-    @State private var fileContent: String = ""
-    @State private var htmlContent: String = ""
+    @StateObject private var viewModel = MarkdownViewModel()
+    @State private var showingEditView = false
     @State private var isLoading = true
-    @State private var error: Error?
-    @State private var loadedURL: URL?
-    
-    private let markdownService = MarkdownService()
     
     var body: some View {
         VStack(spacing: 0) {
-            // File header
+            // File header with edit controls
             HStack {
                 Image(systemName: "doc.text")
                     .foregroundColor(.secondary)
@@ -20,7 +16,20 @@ struct FilePreviewView: View {
                     .font(.headline)
                     .lineLimit(1)
                     .truncationMode(.middle)
+                
+                if viewModel.hasUnsavedChanges {
+                    Image(systemName: "circle.fill")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                }
+                
                 Spacer()
+                
+                // Edit mode toggle for markdown files
+                if fileURL.pathExtension.lowercased() == "md" {
+                    // Use window instead of sheet
+                    EditWindowButton(fileURL: fileURL)
+                }
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
@@ -32,7 +41,7 @@ struct FilePreviewView: View {
             if isLoading {
                 ProgressView("Loading...")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if let error = error {
+            } else if let error = viewModel.renderError {
                 VStack(spacing: 16) {
                     Image(systemName: "exclamationmark.triangle")
                         .font(.system(size: 48))
@@ -45,12 +54,11 @@ struct FilePreviewView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if fileURL.pathExtension.lowercased() == "md" {
-                // Render markdown as HTML
-                MarkdownPreviewView(htmlContent: htmlContent)
+                MarkdownPreviewView(htmlContent: viewModel.renderedHTML)
             } else {
                 // Show raw text for non-markdown files
                 ScrollView {
-                    Text(fileContent)
+                    Text(viewModel.currentDocument?.content ?? "")
                         .font(.system(.body, design: .monospaced))
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -59,58 +67,25 @@ struct FilePreviewView: View {
             }
         }
         .onAppear {
-            loadFile()
-        }
-        .onChange(of: fileURL) { newURL in
-            if loadedURL != newURL {
-                loadFile()
+            Task {
+                await viewModel.loadDocument(at: fileURL)
+                isLoading = false
             }
         }
-    }
-    
-    private func loadFile() {
-        guard loadedURL != fileURL else { return }
-        
-        isLoading = true
-        error = nil
-        loadedURL = fileURL
-        
-        Task {
-            do {
-                let content = try String(contentsOf: fileURL, encoding: .utf8)
-                
-                // If it's a markdown file, parse and render it
-                if fileURL.pathExtension.lowercased() == "md" {
-                    let parsed = try await markdownService.parseMarkdown(content)
-                    let renderedHTML = await markdownService.renderToHTML(parsed)
-                    
-                    // Wrap HTML with Mermaid support if needed
-                    let finalHTML = MermaidHTMLGenerator.wrapHTMLWithMermaid(renderedHTML, mermaidBlocks: parsed.mermaidBlocks)
-                    
-                    await MainActor.run {
-                        // Only update if this is still the current file
-                        if self.loadedURL == fileURL {
-                            self.fileContent = content
-                            self.htmlContent = finalHTML
-                            self.isLoading = false
-                        }
-                    }
-                } else {
-                    await MainActor.run {
-                        // Only update if this is still the current file
-                        if self.loadedURL == fileURL {
-                            self.fileContent = content
-                            self.isLoading = false
-                        }
-                    }
+        .onChange(of: fileURL) { newURL in
+            // Check for unsaved changes before switching
+            if viewModel.hasUnsavedChanges {
+                // In a real app, we'd show an alert here
+                // For now, just save automatically
+                Task {
+                    await viewModel.saveCurrentDocument()
+                    await viewModel.loadDocument(at: newURL)
+                    isLoading = false
                 }
-            } catch {
-                await MainActor.run {
-                    // Only update if this is still the current file
-                    if self.loadedURL == fileURL {
-                        self.error = error
-                        self.isLoading = false
-                    }
+            } else {
+                Task {
+                    await viewModel.loadDocument(at: newURL)
+                    isLoading = false
                 }
             }
         }

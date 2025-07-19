@@ -90,7 +90,7 @@
     - Write unit tests for Markdown parsing and rendering
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-  - [ ] 6.2 Implement MarkdownViewModel for content management
+  - [X] 6.2 Implement MarkdownViewModel for content management
     - Create MarkdownViewModel with content state management
     - Add file loading and rendering coordination
     - Include performance optimization with caching
@@ -115,8 +115,8 @@
     - Write integration tests for file selection workflow
     - _Requirements: 6.1, 10.1_
 
-- [ ] 8. Mermaid Diagram Integration
-  - [ ] 8.1 Create MermaidRenderer for diagram processing
+- [X] 8. Mermaid Diagram Integration
+  - [X] 8.1 Create MermaidRenderer for diagram processing
     - Implement MermaidRenderer class with WKWebView integration
     - Add Mermaid.js library integration with security sandbox
     - Include diagram extraction from Markdown content
@@ -124,7 +124,7 @@
     - Write unit tests for Mermaid processing
     - _Requirements: 3.1, 3.3, 3.4_
 
-  - [ ] 8.2 Integrate Mermaid rendering into preview pipeline
+  - [X] 8.2 Integrate Mermaid rendering into preview pipeline
     - Add Mermaid block detection in MarkdownService
     - Implement seamless diagram rendering within content
     - Include zoom and pan capabilities for complex diagrams
@@ -132,8 +132,8 @@
     - Write integration tests for Mermaid workflow
     - _Requirements: 3.1, 3.2, 6.4_
 
-- [ ] 9. Markdown Editing Capabilities
-  - [ ] 9.1 Create MarkdownEditor component
+- [X] 9. Markdown Editing Capabilities
+  - [X] 9.1 Create MarkdownEditor component
     - Implement MarkdownEditor SwiftUI view with syntax highlighting
     - Add text editing capabilities with Markdown-specific features
     - Include real-time preview updates or manual refresh option
@@ -141,7 +141,7 @@
     - Write UI tests for editor functionality
     - _Requirements: 9.1, 9.2, 9.7_
 
-  - [ ] 9.2 Implement edit mode switching and layouts
+  - [X] 9.2 Implement edit mode switching and layouts
     - Add toggle between preview and edit modes (Cmd+E)
     - Implement fullscreen and side-by-side edit layouts
     - Include cursor position and scroll location preservation

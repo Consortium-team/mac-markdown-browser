@@ -2,6 +2,13 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## MUST FOLLOW RULES FOR EVERY PROMPT
+1. Use Context7
+2. Adhere to the two steering personas 
+- .kiro/steering/product.md
+- .kiro/steering/tech.md
+3. Start your response by saying "I will proceed as a product and tech expert using Context7 whenever I need to look up info about api and packages"
+
 ## Development Workflow
 
 1. Understand current state by reviewing documents in .kiro/steering
