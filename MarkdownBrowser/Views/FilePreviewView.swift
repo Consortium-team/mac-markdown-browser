@@ -1,4 +1,5 @@
 import SwiftUI
+import Foundation
 
 struct FilePreviewView: View {
     let fileURL: URL
@@ -86,6 +87,18 @@ struct FilePreviewView: View {
                 Task {
                     await viewModel.loadDocument(at: newURL)
                     isLoading = false
+                }
+            }
+        }
+        .onReceive(
+            NotificationCenter.default.publisher(for: .markdownFileSaved)
+        ) { notification in
+            // Check if the saved file is the one we're displaying
+            if let savedURL = notification.userInfo?["url"] as? URL,
+               savedURL == fileURL {
+                // Reload the document to show the latest changes
+                Task {
+                    await viewModel.loadDocument(at: fileURL)
                 }
             }
         }

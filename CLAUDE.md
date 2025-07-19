@@ -11,11 +11,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Workflow
 
-1. Understand current state by reviewing documents in .kiro/steering
+1. Understand current state by reviewing documents in:
+- docs/requirements/current-features.md
+- docs/development/current-architecture.md
 2. Review requirements in .kiro/specs/mac-markdown-browser
-3. Review design in .kiro/specs/mac-markdown-browser
-4. Review the plan in  .kiro/specs/mac-markdown-browser/tasks.md
-5. For each step:
+3. Review the plan in  .kiro/specs/mac-markdown-browser/tasks.md
+4. For each step:
 - Use the mcp server Context7 when you need information about an api or package
 - Implement the step, check complete in tasks.md when working for each sub-step (2.1, 2.2, etc)
 - After each major step is complete (1,2,3, etc.), launch the app and way for human review feedback

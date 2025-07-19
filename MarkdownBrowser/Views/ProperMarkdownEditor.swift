@@ -1,14 +1,26 @@
 import SwiftUI
 import WebKit
 import Combine
+import AppKit
 
 // MARK: - View Model
 class MarkdownEditorViewModel: ObservableObject {
-    @Published var markdownText: String = ""
+    @Published var markdownText: String = "" {
+        didSet {
+            if markdownText != originalText {
+                hasUnsavedChanges = true
+            }
+        }
+    }
     @Published var htmlContent: String = ""
+    @Published var hasUnsavedChanges: Bool = false
+    @Published var isSaving: Bool = false
     
+    private var originalText: String = ""
     private var cancellables = Set<AnyCancellable>()
     private let markdownService = MarkdownService()
+    private var autoSaveTimer: Timer?
+    private var fileURL: URL?
     
     init() {
         // Debounce markdown changes to avoid excessive updates
@@ -16,6 +28,7 @@ class MarkdownEditorViewModel: ObservableObject {
             .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
             .sink { [weak self] newText in
                 self?.updatePreview(markdown: newText)
+                self?.scheduleAutoSave()
             }
             .store(in: &cancellables)
     }
@@ -32,23 +45,65 @@ class MarkdownEditorViewModel: ObservableObject {
         }
     }
     
+    private func scheduleAutoSave() {
+        // Cancel existing timer
+        autoSaveTimer?.invalidate()
+        
+        // Schedule new auto-save after 2 seconds of inactivity
+        guard hasUnsavedChanges else { return }
+        
+        autoSaveTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: false) { [weak self] _ in
+            Task {
+                await self?.autoSave()
+            }
+        }
+    }
+    
     func loadFile(from url: URL) async {
+        self.fileURL = url
         do {
             let content = try String(contentsOf: url, encoding: .utf8)
             await MainActor.run {
+                self.originalText = content
                 self.markdownText = content
+                self.hasUnsavedChanges = false
             }
         } catch {
             print("Error loading file: \(error)")
         }
     }
     
-    func saveFile(to url: URL) async {
+    func saveFile() async {
+        guard let url = fileURL else { return }
+        
+        await MainActor.run {
+            self.isSaving = true
+        }
+        
         do {
             try markdownText.write(to: url, atomically: true, encoding: .utf8)
+            await MainActor.run {
+                self.originalText = self.markdownText
+                self.hasUnsavedChanges = false
+                self.isSaving = false
+                
+                // Post notification that file was saved
+                NotificationCenter.default.post(
+                    name: .markdownFileSaved,
+                    object: nil,
+                    userInfo: ["url": url]
+                )
+            }
         } catch {
             print("Error saving file: \(error)")
+            await MainActor.run {
+                self.isSaving = false
+            }
         }
+    }
+    
+    private func autoSave() async {
+        await saveFile()
     }
 }
 
@@ -56,17 +111,34 @@ class MarkdownEditorViewModel: ObservableObject {
 struct ProperMarkdownEditor: View {
     let fileURL: URL
     @StateObject private var viewModel = MarkdownEditorViewModel()
-    @Environment(\.dismiss) private var dismiss
     @State private var splitRatio: CGFloat = 0.5
     
     var body: some View {
         VStack(spacing: 0) {
-            // Toolbar
-            EditorToolbar(
-                fileName: fileURL.lastPathComponent,
-                onSave: { Task { await viewModel.saveFile(to: fileURL) } },
-                onClose: { dismiss() }
-            )
+            // Status bar
+            HStack {
+                Image(systemName: "doc.text")
+                    .foregroundColor(.secondary)
+                Text(fileURL.lastPathComponent)
+                    .font(.headline)
+                
+                if viewModel.hasUnsavedChanges {
+                    Text("— Edited")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                if viewModel.isSaving {
+                    ProgressView()
+                        .controlSize(.small)
+                        .padding(.trailing, 8)
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+            .background(Color(NSColor.controlBackgroundColor))
             
             Divider()
             
@@ -87,37 +159,31 @@ struct ProperMarkdownEditor: View {
         .task {
             await viewModel.loadFile(from: fileURL)
         }
-    }
-}
-
-// MARK: - Toolbar
-struct EditorToolbar: View {
-    let fileName: String
-    let onSave: () -> Void
-    let onClose: () -> Void
-    
-    var body: some View {
-        HStack {
-            Image(systemName: "doc.text")
-                .foregroundColor(.secondary)
-            Text(fileName)
-                .font(.headline)
-            
-            Spacer()
-            
-            Button(action: onSave) {
-                Label("Save", systemImage: "square.and.arrow.down")
+        .onAppear {
+            // Setup window tracking when view appears
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                updateWindowDocumentState()
             }
-            .keyboardShortcut("s", modifiers: .command)
-            
-            Button(action: onClose) {
-                Label("Close", systemImage: "xmark")
-            }
-            .keyboardShortcut(.escape, modifiers: [])
         }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(Color(NSColor.controlBackgroundColor))
+        .onChange(of: viewModel.hasUnsavedChanges) { hasChanges in
+            updateWindowDocumentState()
+        }
+        // Add menu bar with File > Save
+        .focusedSceneValue(\.saveAction) {
+            Task {
+                await viewModel.saveFile()
+            }
+        }
+    }
+    
+    private func updateWindowDocumentState() {
+        // Find the window containing this view
+        for window in NSApp.windows {
+            if window.title == fileURL.lastPathComponent {
+                window.isDocumentEdited = viewModel.hasUnsavedChanges
+                break
+            }
+        }
     }
 }
 
@@ -134,6 +200,7 @@ struct MarkdownTextEditor: NSViewRepresentable {
         textView.font = .monospacedSystemFont(ofSize: 14, weight: .regular)
         textView.isAutomaticQuoteSubstitutionEnabled = false
         textView.isRichText = false
+        textView.allowsUndo = true
         
         return scrollView
     }
@@ -143,7 +210,12 @@ struct MarkdownTextEditor: NSViewRepresentable {
         
         // Only update if text actually changed to avoid cursor jumping
         if textView.string != text {
+            let selectedRange = textView.selectedRange()
             textView.string = text
+            // Restore cursor position
+            if selectedRange.location <= text.count {
+                textView.setSelectedRange(selectedRange)
+            }
         }
     }
     
@@ -186,4 +258,21 @@ struct MarkdownPreview: NSViewRepresentable {
     class Coordinator: NSObject, WKNavigationDelegate {
         // Handle navigation if needed
     }
+}
+
+// MARK: - Focused Value for Save Action
+struct SaveActionKey: FocusedValueKey {
+    typealias Value = () -> Void
+}
+
+extension FocusedValues {
+    var saveAction: (() -> Void)? {
+        get { self[SaveActionKey.self] }
+        set { self[SaveActionKey.self] = newValue }
+    }
+}
+
+// MARK: - Notification Names
+extension Notification.Name {
+    static let markdownFileSaved = Notification.Name("markdownFileSaved")
 }

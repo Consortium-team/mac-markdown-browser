@@ -1,78 +1,74 @@
 import SwiftUI
 import AppKit
 
-class EditWindowManager {
+class EditWindowManager: NSObject {
     static let shared = EditWindowManager()
-    private var editWindows: [URL: NSWindow] = [:]
-    private var windowDelegates: [URL: WindowDelegate] = [:]
+    private var windows: [URL: NSWindow] = [:]
+    
+    private override init() {
+        super.init()
+    }
     
     func openEditWindow(for fileURL: URL) {
         // Check if window already exists
-        if let existingWindow = editWindows[fileURL] {
+        if let existingWindow = windows[fileURL] {
             existingWindow.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             return
         }
         
         // Create new window
-        let contentView = ProperMarkdownEditor(fileURL: fileURL)
-            .frame(minWidth: 1000, minHeight: 700)
-            .onDisappear {
-                self.editWindows.removeValue(forKey: fileURL)
-            }
-        
-        let hostingController = NSHostingController(rootView: contentView)
-        
         let window = NSWindow(
-            contentRect: NSRect(x: 100, y: 100, width: 1000, height: 700),
-            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
+            contentRect: NSRect(x: 0, y: 0, width: 1000, height: 700),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         
-        window.title = "Edit: \(fileURL.lastPathComponent)"
-        window.contentViewController = hostingController
+        // Set up window properties
+        window.title = fileURL.lastPathComponent
         window.center()
+        window.isReleasedWhenClosed = false // Important: prevent premature deallocation
         
-        // Make window key and bring to front
+        // Create content view
+        let contentView = ProperMarkdownEditor(fileURL: fileURL)
+        let hostingController = NSHostingController(rootView: contentView)
+        window.contentViewController = hostingController
+        
+        // Store window reference
+        windows[fileURL] = window
+        
+        // Set delegate to self
+        window.delegate = self
+        
+        // Show window
         window.makeKeyAndOrderFront(nil)
-        window.makeMain()
-        
-        // Activate app
         NSApp.activate(ignoringOtherApps: true)
-        
-        // Store reference
-        editWindows[fileURL] = window
-        
-        // Set delegate to clean up
-        let delegate = WindowDelegate(fileURL: fileURL, manager: self)
-        window.delegate = delegate
-        windowDelegates[fileURL] = delegate
     }
     
-    func closeEditWindow(for fileURL: URL) {
-        editWindows[fileURL]?.close()
-        editWindows.removeValue(forKey: fileURL)
-        windowDelegates.removeValue(forKey: fileURL)
-    }
-    
-    class WindowDelegate: NSObject, NSWindowDelegate {
-        let fileURL: URL
-        weak var manager: EditWindowManager?
-        
-        init(fileURL: URL, manager: EditWindowManager) {
-            self.fileURL = fileURL
-            self.manager = manager
-        }
-        
-        func windowWillClose(_ notification: Notification) {
-            manager?.editWindows.removeValue(forKey: fileURL)
-            manager?.windowDelegates.removeValue(forKey: fileURL)
+    private func cleanupWindow(for url: URL) {
+        if let window = windows[url] {
+            window.delegate = nil
+            window.contentViewController = nil
+            windows.removeValue(forKey: url)
         }
     }
 }
 
-// View to open edit window instead of sheet
+// MARK: - NSWindowDelegate
+extension EditWindowManager: NSWindowDelegate {
+    func windowWillClose(_ notification: Notification) {
+        guard let window = notification.object as? NSWindow else { return }
+        
+        // Find the URL for this window
+        for (url, win) in windows where win === window {
+            cleanupWindow(for: url)
+            break
+        }
+    }
+}
+
+// MARK: - Button View
 struct EditWindowButton: View {
     let fileURL: URL
     

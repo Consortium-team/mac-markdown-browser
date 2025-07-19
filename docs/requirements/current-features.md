@@ -111,7 +111,7 @@ This document describes the current state of implemented features in MarkdownBro
 ### Minor Issues
 
 2. **Mermaid Diagrams Not Rendering**
-   - **Description**: Mermaid code blocks are detected but not rendered as diagrams
+   - **Description**: Mermaid code blocks are detected but not rendered as diagrams in the edit preview pane
    - **Impact**: Medium - Feature exists but is non-functional
 
 3. **No Scroll Synchronization**

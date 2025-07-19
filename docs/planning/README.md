@@ -12,5 +12,4 @@ This directory contains project planning documents, timelines, and strategic pla
 
 ## Related Documents
 
-- Design document: `/.kiro/specs/mac-markdown-browser/design.md`
 - Implementation plan: `/.kiro/specs/mac-markdown-browser/tasks.md`

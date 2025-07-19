@@ -71,3 +71,28 @@ swift package resolve
 - Implement proper error handling with Result types
 - Use async/await for file operations
 - Maintain separation of concerns between Models, Views, and ViewModels
+
+## Apple Human Interface Guidelines Compliance
+
+### Window Management
+- **Window Controls**: Use standard macOS window controls (red/yellow/green "traffic light" buttons)
+  - Do NOT add custom close/minimize/maximize buttons
+  - Let NSWindow handle the standard window controls automatically
+  - Access via: `window.standardWindowButton(.closeButton)` if needed
+- **Window Styles**: Use appropriate NSWindow style masks:
+  ```swift
+  [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
+  ```
+- **Document Windows**: For document-based windows, show unsaved changes indicator (dot in close button)
+
+### General macOS Design Principles
+- **Native Controls**: Always use native macOS controls and behaviors
+- **Keyboard Shortcuts**: Follow standard macOS keyboard shortcuts (Cmd+S for save, Cmd+W for close window, etc.)
+- **Window Behavior**: Windows should behave consistently with other macOS apps
+- **Dark Mode**: Support both light and dark appearance modes
+- **Accessibility**: Ensure all UI elements are accessible via VoiceOver
+
+### Resources
+- Consult Apple's Human Interface Guidelines: https://developer.apple.com/design/human-interface-guidelines/
+- Use native NSWindow/SwiftUI window management APIs
+- Test on actual macOS to ensure native behavior
