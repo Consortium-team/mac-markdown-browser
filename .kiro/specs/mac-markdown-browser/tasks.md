@@ -81,7 +81,7 @@
     - Write UI tests for directory panel interactions
     - _Requirements: 1.1, 5.3, 5.4_
 
-- [ ] 6. Markdown Processing and Rendering
+- [X] 6. Markdown Processing and Rendering
   - [x] 6.1 Create MarkdownService for content processing
     - Implement MarkdownService with Swift Markdown integration
     - Add GitHub-compatible HTML rendering with CSS styling
@@ -98,8 +98,8 @@
     - Write unit tests for view model logic
     - _Requirements: 2.1, 6.1, 6.3, 10.3_
 
-- [ ] 7. Basic Preview Panel Implementation
-  - [ ] 7.1 Create PreviewPanel for right pane content display
+- [X] 7. Basic Preview Panel Implementation
+  - [X] 7.1 Create PreviewPanel for right pane content display
     - Implement PreviewPanel SwiftUI view with toolbar
     - Add basic Markdown content display using WKWebView
     - Include scroll synchronization and smooth interactions
@@ -107,7 +107,7 @@
     - Write UI tests for preview panel functionality
     - _Requirements: 1.1, 2.1, 7.2_
 
-  - [ ] 7.2 Integrate file selection with preview updates
+  - [X] 7.2 Integrate file selection with preview updates
     - Connect DirectoryPanel file selection to PreviewPanel updates
     - Implement sub-100ms file switching performance
     - Add loading indicators for content processing

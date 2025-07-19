@@ -82,13 +82,16 @@ struct FilePreviewView: View {
                 // If it's a markdown file, parse and render it
                 if fileURL.pathExtension.lowercased() == "md" {
                     let parsed = try await markdownService.parseMarkdown(content)
-                    let html = await markdownService.renderToHTML(parsed)
+                    let renderedHTML = await markdownService.renderToHTML(parsed)
+                    
+                    // Wrap HTML with Mermaid support if needed
+                    let finalHTML = MermaidHTMLGenerator.wrapHTMLWithMermaid(renderedHTML, mermaidBlocks: parsed.mermaidBlocks)
                     
                     await MainActor.run {
                         // Only update if this is still the current file
                         if self.loadedURL == fileURL {
                             self.fileContent = content
-                            self.htmlContent = html
+                            self.htmlContent = finalHTML
                             self.isLoading = false
                         }
                     }
