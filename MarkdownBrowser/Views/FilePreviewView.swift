@@ -6,6 +6,11 @@ struct FilePreviewView: View {
     @StateObject private var viewModel = MarkdownViewModel()
     @State private var showingEditView = false
     @State private var isLoading = true
+    @State private var isExportingPDF = false
+    @State private var exportError: Error?
+    @State private var showExportSuccess = false
+    @State private var exportedFileURL: URL?
+    @State private var exportTask: Task<Void, Never>?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -25,6 +30,16 @@ struct FilePreviewView: View {
                 }
                 
                 Spacer()
+                
+                // Export PDF button for markdown and HTML files
+                if fileURL.isMarkdownFile || fileURL.isHTMLFile {
+                    Button(action: exportToPDF) {
+                        Label("Export PDF", systemImage: "square.and.arrow.up")
+                    }
+                    .keyboardShortcut("e", modifiers: [.command, .shift])
+                    .disabled(isExportingPDF || isLoading)
+                    .padding(.trailing, 8)
+                }
                 
                 // Edit mode toggle for markdown files
                 if fileURL.isMarkdownFile {
@@ -102,6 +117,92 @@ struct FilePreviewView: View {
                     await viewModel.loadDocument(at: fileURL)
                 }
             }
+        }
+        .alert("Export Complete", isPresented: $showExportSuccess) {
+            Button("Show in Finder") {
+                if let url = exportedFileURL {
+                    DownloadSaveManager.shared.showInFinder(url: url)
+                }
+            }
+            Button("OK", role: .cancel) { }
+        } message: {
+            if let url = exportedFileURL {
+                Text("PDF saved to: \(url.lastPathComponent)")
+            }
+        }
+        .alert("Export Error", isPresented: .constant(exportError != nil)) {
+            Button("OK") { exportError = nil }
+        } message: {
+            Text(exportError?.localizedDescription ?? "Unknown error")
+        }
+        .sheet(isPresented: $isExportingPDF) {
+            VStack(spacing: 20) {
+                ProgressView("Exporting PDF...")
+                Button("Cancel") {
+                    exportTask?.cancel()
+                    isExportingPDF = false
+                }
+                .keyboardShortcut(.escape)
+            }
+            .padding(40)
+        }
+    }
+    
+    private func exportToPDF() {
+        isExportingPDF = true
+        exportError = nil
+        
+        exportTask = Task {
+            do {
+                let pdfData: Data
+                
+                // Check for cancellation
+                if Task.isCancelled {
+                    isExportingPDF = false
+                    return
+                }
+                
+                if fileURL.isMarkdownFile {
+                    // Export markdown to PDF
+                    guard let content = viewModel.currentDocument?.content else {
+                        throw PDFExportError.contentNotReady
+                    }
+                    pdfData = try await PDFExportService.shared.exportMarkdownToPDF(content: content)
+                } else if fileURL.isHTMLFile {
+                    // Export HTML to PDF
+                    let htmlContent = try String(contentsOf: fileURL, encoding: .utf8)
+                    pdfData = try await PDFExportService.shared.exportHTMLToPDF(
+                        html: htmlContent,
+                        baseURL: fileURL.deletingLastPathComponent()
+                    )
+                } else {
+                    throw PDFExportError.contentNotReady
+                }
+                
+                // Check for cancellation before saving
+                if Task.isCancelled {
+                    isExportingPDF = false
+                    return
+                }
+                
+                // Save to Downloads folder
+                let baseFilename = fileURL.deletingPathExtension().lastPathComponent
+                let savedURL = try await DownloadSaveManager.shared.saveToDownloads(
+                    data: pdfData,
+                    baseFilename: baseFilename,
+                    fileExtension: "pdf"
+                )
+                
+                exportedFileURL = savedURL
+                showExportSuccess = true
+                
+            } catch {
+                if !Task.isCancelled {
+                    exportError = error
+                }
+            }
+            
+            isExportingPDF = false
         }
     }
 }
