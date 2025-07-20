@@ -2,12 +2,43 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## MUST FOLLOW RULES FOR EVERY PROMPT
-1. Use Context7
-2. Adhere to the two steering personas 
-- .kiro/steering/product.md
-- .kiro/steering/tech.md
-3. Start your response by saying "I will proceed as a product and tech expert using Context7 whenever I need to look up info about api and packages"
+## MDBrowser Development Workflow
+
+### Core Activities & Slash Commands
+
+1. **Capture Change Request**: `/change-request <feature description>`
+   - Creates formal change request document in docs/feedback/
+   - Uses Product Manager persona from .kiro/steering/product.md
+
+2. **Create Feature Branch**: `/feature-branch <change-request-name>`
+   - Creates and pushes Git feature branch
+   - Naming convention: feature/[change-request-name]
+
+3. **Baseline Understanding**: `/baseline`
+   - Reviews current features and architecture
+   - Provides context for informed decisions
+
+4. **Design & Plan**: `/design-plan <change-request-name>`
+   - Creates software design document in docs/development/
+   - Creates implementation plan in docs/planning/
+   - Uses both Product and Tech personas
+
+5. **Implementation**: `/implement <change-request-name>`
+   - Follows the plan, checking off tasks
+   - Writes tests for each major task
+   - Uses Context7 and Web Search as needed
+
+6. **Capture Learnings**: `/capture-learnings <change-request-name>`
+   - Updates current-features.md and current-architecture.md
+   - Archives completed documents
+   - Creates PR when complete
+
+### Quick Reference
+- Always use Context7 for API/library documentation
+- Use Web Search for implementation difficulties
+- Follow Apple HIG for all UI decisions
+- Write tests before moving to next major task
+- Update documentation as you complete features
 
 ## Development Workflow
 
