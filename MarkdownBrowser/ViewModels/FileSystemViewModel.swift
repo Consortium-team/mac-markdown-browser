@@ -16,6 +16,7 @@ class FileSystemViewModel: ObservableObject {
     @Published var showOnlyMarkdownFiles: Bool = false
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
+    @Published var refreshTrigger: UUID = UUID()  // Force view updates
     
     // MARK: - Private Properties
     
@@ -332,6 +333,33 @@ class FileSystemViewModel: ObservableObject {
         return nil
     }
     
+    /// Refresh all expanded directories in the tree
+    private func refreshExpandedDirectories(in node: DirectoryNode) async {
+        // If this node is an expanded directory, refresh it
+        if node.isDirectory && node.isExpanded {
+            print("🔄 Refreshing expanded directory: \(node.name)")
+            await node.refresh()
+        }
+        
+        // Recursively refresh children
+        for child in node.children {
+            await refreshExpandedDirectories(in: child)
+        }
+    }
+    
+    /// Restore expanded state after reloading the tree
+    private func restoreExpandedState(in node: DirectoryNode, expandedIds: Set<UUID>) async {
+        if expandedIds.contains(node.id) && node.isDirectory {
+            node.isExpanded = true
+            await node.loadChildren()
+            
+            // Recursively restore state for children
+            for child in node.children {
+                await restoreExpandedState(in: child, expandedIds: expandedIds)
+            }
+        }
+    }
+    
     // MARK: - File Operations
     
     /// Move a file or directory to a new location
@@ -355,16 +383,28 @@ class FileSystemViewModel: ObservableObject {
             
             print("✅ Move succeeded, refreshing directory tree...")
             
-            // Store current expanded state before refresh
-            let currentExpandedNodes = expandedNodes
-            
-            // Refresh the entire tree to ensure all changes are reflected
-            await refresh()
-            
-            // Restore expanded state
-            expandedNodes = currentExpandedNodes
-            
-            print("✅ Directory tree refreshed")
+            // Force a complete refresh by reloading from the root
+            // This is the nuclear option but ensures the view updates
+            if let currentRoot = rootNode {
+                let rootURL = currentRoot.url
+                let currentExpanded = expandedNodes
+                
+                // Reload the entire tree
+                await navigateToDirectory(rootURL)
+                
+                // Restore expanded state and reload expanded directories
+                expandedNodes = currentExpanded
+                if let newRoot = rootNode {
+                    await restoreExpandedState(in: newRoot, expandedIds: currentExpanded)
+                }
+                
+                // Force SwiftUI to update by changing a published property
+                await MainActor.run {
+                    self.refreshTrigger = UUID()
+                }
+                
+                print("✅ Directory tree completely reloaded")
+            }
             
             // If the moved file was selected, clear selection
             if selectedNode?.url == source {

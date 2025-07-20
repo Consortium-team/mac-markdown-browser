@@ -6,10 +6,16 @@ struct MarkdownBrowserApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            // Using VSCode-style file explorer
+            VSCodeStyleExplorer()
+            // NativeFileBrowser() // Native Mac file browser attempt
+            // StandardContentView() // NavigationSplitView attempt
+            // TestContentView() // OutlineGroup attempt
+            // ContentView() // Original implementation
         }
         .windowResizability(.contentSize)
         .windowToolbarStyle(.unified)
+        .defaultSize(width: 1200, height: 800)
         .commands {
             CommandGroup(replacing: .saveItem) {
                 Button("Save") {

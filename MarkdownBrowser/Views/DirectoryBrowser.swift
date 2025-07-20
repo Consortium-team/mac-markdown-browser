@@ -41,6 +41,7 @@ struct DirectoryBrowser: View {
                             fileSystemVM: fileSystemVM,
                             searchQuery: searchQuery
                         )
+                        .id(fileSystemVM.refreshTrigger) // Force view recreation on refresh
                     }
                     .padding(.vertical, 8)
                 } else {
@@ -177,7 +178,7 @@ struct DirectoryNodeView: View {
                     .shadow(radius: 4)
                 })
                 .accessibilityLabel(node.isDirectory ? "Draggable folder: \(node.name)" : "Draggable file: \(node.name)")
-                .accessibilityHint("Drag to move to another folder")
+                // .accessibilityHint("Drag to move to another folder")
                 .if(node.isDirectory) { view in
                     view.onDrop(of: [.fileURL], delegate: FileDragDelegate(
                         targetNode: node,
@@ -185,7 +186,7 @@ struct DirectoryNodeView: View {
                         isTargeted: $isDropTargeted
                     ))
                     .accessibilityLabel("Drop target folder: \(node.name)")
-                    .accessibilityHint("Drop files here to move them into this folder")
+                    // .accessibilityHint("Drop files here to move them into this folder")
                 }
                 .contextMenu {
                     if node.isDirectory {
