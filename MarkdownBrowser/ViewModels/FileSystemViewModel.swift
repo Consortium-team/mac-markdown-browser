@@ -310,6 +310,28 @@ class FileSystemViewModel: ObservableObject {
         }
     }
     
+    /// Find a node with the given URL in the tree
+    private func findNode(with url: URL, in node: DirectoryNode) -> DirectoryNode? {
+        // Normalize paths for comparison
+        let targetPath = url.standardizedFileURL.path
+        let nodePath = node.url.standardizedFileURL.path
+        
+        if nodePath == targetPath {
+            return node
+        }
+        
+        // Only search children if this node is a directory and has been loaded
+        if node.isDirectory && (node.isExpanded || !node.children.isEmpty) {
+            for child in node.children {
+                if let found = findNode(with: url, in: child) {
+                    return found
+                }
+            }
+        }
+        
+        return nil
+    }
+    
     // MARK: - File Operations
     
     /// Move a file or directory to a new location
@@ -318,19 +340,35 @@ class FileSystemViewModel: ObservableObject {
     ///   - destination: Destination URL to move to
     @MainActor
     func moveFile(from source: URL, to destination: URL) async throws {
+        print("🎬 FileSystemViewModel.moveFile called")
+        print("   Source: \(source.path)")
+        print("   Destination: \(destination.path)")
+        
         do {
             // Show loading state
             isLoading = true
             errorMessage = nil
             
+            print("📡 Calling fileSystemService.moveFile...")
             // Perform the move
             try await fileSystemService.moveFile(from: source, to: destination)
             
-            // Refresh the directory tree to show the changes
+            print("✅ Move succeeded, refreshing directory tree...")
+            
+            // Store current expanded state before refresh
+            let currentExpandedNodes = expandedNodes
+            
+            // Refresh the entire tree to ensure all changes are reflected
             await refresh()
+            
+            // Restore expanded state
+            expandedNodes = currentExpandedNodes
+            
+            print("✅ Directory tree refreshed")
             
             // If the moved file was selected, clear selection
             if selectedNode?.url == source {
+                print("🔄 Clearing selection as moved file was selected")
                 selectedNode = nil
             }
             
@@ -341,7 +379,9 @@ class FileSystemViewModel: ObservableObject {
                                userInfo: [.announcement: "Moved \(fileName) to \(destinationName)"])
             
             isLoading = false
+            print("✅ FileSystemViewModel.moveFile completed successfully")
         } catch {
+            print("❌ FileSystemViewModel.moveFile failed: \(error)")
             isLoading = false
             errorMessage = error.localizedDescription
             

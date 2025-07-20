@@ -158,28 +158,26 @@ struct DirectoryNodeView: View {
                         }
                     }
                 }
-                .if(!node.isDirectory) { view in
-                    view.onDrag({
-                        NSItemProvider(object: node.url as NSURL)
-                    }, preview: {
-                        HStack(spacing: 4) {
-                            Image(systemName: node.fileType.iconName)
-                                .font(.system(size: 14))
-                                .foregroundColor(.secondary)
-                            Text(node.name)
-                                .font(.system(size: 12))
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                        }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(NSColor.controlBackgroundColor))
-                        .cornerRadius(6)
-                        .shadow(radius: 4)
-                    })
-                    .accessibilityLabel("Draggable file: \(node.name)")
-                    .accessibilityHint("Drag to move to another folder")
-                }
+                .onDrag({
+                    NSItemProvider(object: node.url as NSURL)
+                }, preview: {
+                    HStack(spacing: 4) {
+                        Image(systemName: node.fileType.iconName)
+                            .font(.system(size: 14))
+                            .foregroundColor(node.isDirectory ? .accentColor : .secondary)
+                        Text(node.name)
+                            .font(.system(size: 12))
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color(NSColor.controlBackgroundColor))
+                    .cornerRadius(6)
+                    .shadow(radius: 4)
+                })
+                .accessibilityLabel(node.isDirectory ? "Draggable folder: \(node.name)" : "Draggable file: \(node.name)")
+                .accessibilityHint("Drag to move to another folder")
                 .if(node.isDirectory) { view in
                     view.onDrop(of: [.fileURL], delegate: FileDragDelegate(
                         targetNode: node,

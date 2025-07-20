@@ -133,43 +133,60 @@ class FileSystemService: ObservableObject {
     /// - Throws: FileSystemError if move fails
     @MainActor
     func moveFile(from source: URL, to destination: URL) async throws {
+        print("🚚 FileSystemService.moveFile called")
+        print("   Source: \(source.path)")
+        print("   Destination: \(destination.path)")
+        
         // Check specific error conditions first
         if fileManager.fileExists(atPath: destination.path) {
+            print("❌ Destination already exists: \(destination.path)")
             throw FileSystemError.fileExists(destination)
         }
         
         // Validate that we can move the file
         guard canMoveFile(from: source, to: destination) else {
+            print("❌ canMoveFile returned false")
             throw FileSystemError.invalidMove(source, destination)
         }
+        
+        print("✅ Validation passed, proceeding with move")
         
         return try await withCheckedThrowingContinuation { continuation in
             fileSystemQueue.async { [weak self] in
                 guard let self = self else {
+                    print("❌ Service unavailable (self is nil)")
                     continuation.resume(throwing: FileSystemError.serviceUnavailable)
                     return
                 }
                 
                 do {
                     // Check if source has security-scoped access
+                    print("🔐 Attempting security-scoped access for source...")
                     let sourceAccessible = source.startAccessingSecurityScopedResource()
+                    print("   Source accessible: \(sourceAccessible)")
                     defer {
                         if sourceAccessible {
+                            print("🔓 Stopping security-scoped access for source")
                             source.stopAccessingSecurityScopedResource()
                         }
                     }
                     
                     // Check if destination directory has security-scoped access
                     let destDir = destination.deletingLastPathComponent()
+                    print("🔐 Attempting security-scoped access for destination directory: \(destDir.path)")
                     let destAccessible = destDir.startAccessingSecurityScopedResource()
+                    print("   Destination directory accessible: \(destAccessible)")
                     defer {
                         if destAccessible {
+                            print("🔓 Stopping security-scoped access for destination directory")
                             destDir.stopAccessingSecurityScopedResource()
                         }
                     }
                     
                     // Perform the move
+                    print("🏃 Calling FileManager.moveItem...")
                     try self.fileManager.moveItem(at: source, to: destination)
+                    print("✅ FileManager.moveItem succeeded")
                     
                     // Notify FSEvents monitoring about the change
                     // The monitoring will automatically pick up the change
@@ -177,12 +194,18 @@ class FileSystemService: ObservableObject {
                     continuation.resume(returning: ())
                 } catch CocoaError.fileWriteFileExists {
                     // File already exists at destination
+                    print("❌ CocoaError.fileWriteFileExists")
                     continuation.resume(throwing: FileSystemError.fileExists(destination))
                 } catch CocoaError.fileWriteNoPermission {
                     // No permission to write to destination
+                    print("❌ CocoaError.fileWriteNoPermission")
                     continuation.resume(throwing: FileSystemError.accessDenied(destination))
                 } catch {
                     // Other errors
+                    print("❌ Other error: \(error)")
+                    print("   Error type: \(type(of: error))")
+                    print("   Error domain: \((error as NSError).domain)")
+                    print("   Error code: \((error as NSError).code)")
                     continuation.resume(throwing: FileSystemError.moveFailed(source, destination, error))
                 }
             }
@@ -195,37 +218,50 @@ class FileSystemService: ObservableObject {
     ///   - destination: Destination URL
     /// - Returns: True if the move is valid
     func canMoveFile(from source: URL, to destination: URL) -> Bool {
+        print("🔍 canMoveFile checking...")
+        
         // Can't move to the same location
         if source == destination {
+            print("❌ Source equals destination")
             return false
         }
         
         // Can't move a directory into itself or its children
         if isChildOf(child: destination, parent: source) {
+            print("❌ Destination is child of source")
             return false
         }
         
         // Check if source exists
         guard fileManager.fileExists(atPath: source.path) else {
+            print("❌ Source does not exist: \(source.path)")
             return false
         }
+        print("✅ Source exists")
         
         // Check if destination already exists
         if fileManager.fileExists(atPath: destination.path) {
+            print("❌ Destination already exists: \(destination.path)")
             return false
         }
+        print("✅ Destination does not exist")
         
         // Check if we have read access to source
         guard fileManager.isReadableFile(atPath: source.path) else {
+            print("❌ No read access to source: \(source.path)")
             return false
         }
+        print("✅ Have read access to source")
         
         // Check if we have write access to destination directory
         let destDir = destination.deletingLastPathComponent()
         guard fileManager.isWritableFile(atPath: destDir.path) else {
+            print("❌ No write access to destination directory: \(destDir.path)")
             return false
         }
+        print("✅ Have write access to destination directory")
         
+        print("✅ All validation checks passed")
         return true
     }
     
