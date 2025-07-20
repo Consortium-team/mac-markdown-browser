@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct DirectoryBrowser: View {
     @ObservedObject var fileSystemVM: FileSystemViewModel
@@ -71,6 +72,7 @@ struct DirectoryNodeView: View {
     @ObservedObject var fileSystemVM: FileSystemViewModel
     let searchQuery: String
     @Environment(\.indentLevel) var indentLevel: Int
+    @State private var isDropTargeted = false
     
     private var shouldShow: Bool {
         searchQuery.isEmpty || node.name.localizedCaseInsensitiveContains(searchQuery)
@@ -139,7 +141,12 @@ struct DirectoryNodeView: View {
                 .padding(.vertical, 2)
                 .background(
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(fileSystemVM.selectedNode == node ? Color.accentColor : Color.clear)
+                        .fill(fileSystemVM.selectedNode == node ? Color.accentColor : 
+                              isDropTargeted ? Color.accentColor.opacity(0.3) : Color.clear)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(isDropTargeted ? Color.accentColor : Color.clear, lineWidth: 2)
+                        )
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
@@ -151,13 +158,32 @@ struct DirectoryNodeView: View {
                         }
                     }
                 }
-                .onDrag {
-                    // Only allow dragging directories
-                    if node.isDirectory {
-                        return NSItemProvider(object: node.url as NSURL)
-                    } else {
-                        return NSItemProvider()
-                    }
+                .if(!node.isDirectory) { view in
+                    view.onDrag({
+                        NSItemProvider(object: node.url as NSURL)
+                    }, preview: {
+                        HStack(spacing: 4) {
+                            Image(systemName: node.fileType.iconName)
+                                .font(.system(size: 14))
+                                .foregroundColor(.secondary)
+                            Text(node.name)
+                                .font(.system(size: 12))
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color(NSColor.controlBackgroundColor))
+                        .cornerRadius(6)
+                        .shadow(radius: 4)
+                    })
+                }
+                .if(node.isDirectory) { view in
+                    view.onDrop(of: [.fileURL], delegate: FileDragDelegate(
+                        targetNode: node,
+                        fileSystemVM: fileSystemVM,
+                        isTargeted: $isDropTargeted
+                    ))
                 }
                 .contextMenu {
                     if node.isDirectory {

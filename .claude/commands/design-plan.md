@@ -16,7 +16,7 @@ As the Tech Lead (following .kiro/steering/tech.md):
 
 As both Product Manager and Tech Lead:
 4. Create an implementation plan in docs/planning/
-5. Break down into specific, testable tasks
+5. Break down into specific, testable tasks with a [ ] that get checked off for each task and subtask.
 6. Include acceptance criteria and performance requirements
 7. Prioritize tasks based on dependencies
 
