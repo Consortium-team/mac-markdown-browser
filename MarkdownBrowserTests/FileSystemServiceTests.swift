@@ -185,10 +185,148 @@ final class FileSystemServiceTests: XCTestCase {
         }
     }
     
+    // MARK: - Move File Tests
+    
+    func testMoveFileSuccess() async throws {
+        // Create source file
+        let sourceFile = tempDirectory.appendingPathComponent("source.md")
+        let destinationFile = tempDirectory.appendingPathComponent("destination.md")
+        try "Test content".write(to: sourceFile, atomically: true, encoding: .utf8)
+        
+        // Move file
+        try await fileSystemService.moveFile(from: sourceFile, to: destinationFile)
+        
+        // Verify file was moved
+        XCTAssertFalse(FileManager.default.fileExists(atPath: sourceFile.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: destinationFile.path))
+        
+        // Verify content
+        let content = try String(contentsOf: destinationFile)
+        XCTAssertEqual(content, "Test content")
+    }
+    
+    func testMoveFileToSubdirectory() async throws {
+        // Create source file and subdirectory
+        let sourceFile = tempDirectory.appendingPathComponent("source.md")
+        let subDir = tempDirectory.appendingPathComponent("subdir")
+        let destinationFile = subDir.appendingPathComponent("moved.md")
+        
+        try "Test content".write(to: sourceFile, atomically: true, encoding: .utf8)
+        try FileManager.default.createDirectory(at: subDir, withIntermediateDirectories: true)
+        
+        // Move file
+        try await fileSystemService.moveFile(from: sourceFile, to: destinationFile)
+        
+        // Verify file was moved
+        XCTAssertFalse(FileManager.default.fileExists(atPath: sourceFile.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: destinationFile.path))
+    }
+    
+    func testMoveFileAlreadyExists() async throws {
+        // Create source and existing destination files
+        let sourceFile = tempDirectory.appendingPathComponent("source.md")
+        let destinationFile = tempDirectory.appendingPathComponent("destination.md")
+        
+        try "Source content".write(to: sourceFile, atomically: true, encoding: .utf8)
+        try "Existing content".write(to: destinationFile, atomically: true, encoding: .utf8)
+        
+        // Attempt to move should fail
+        do {
+            try await fileSystemService.moveFile(from: sourceFile, to: destinationFile)
+            XCTFail("Expected fileExists error")
+        } catch let error as FileSystemError {
+            if case .fileExists(let url) = error {
+                XCTAssertEqual(url, destinationFile)
+            } else {
+                XCTFail("Expected fileExists error, got \(error)")
+            }
+        }
+        
+        // Verify source file still exists
+        XCTAssertTrue(FileManager.default.fileExists(atPath: sourceFile.path))
+    }
+    
+    func testMoveNonExistentFile() async throws {
+        let sourceFile = tempDirectory.appendingPathComponent("nonexistent.md")
+        let destinationFile = tempDirectory.appendingPathComponent("destination.md")
+        
+        // Attempt to move should fail
+        do {
+            try await fileSystemService.moveFile(from: sourceFile, to: destinationFile)
+            XCTFail("Expected invalidMove error")
+        } catch let error as FileSystemError {
+            if case .invalidMove(let source, let dest) = error {
+                XCTAssertEqual(source, sourceFile)
+                XCTAssertEqual(dest, destinationFile)
+            } else {
+                XCTFail("Expected invalidMove error, got \(error)")
+            }
+        }
+    }
+    
+    // MARK: - Can Move File Tests
+    
+    func testCanMoveFileValidMove() {
+        let sourceFile = tempDirectory.appendingPathComponent("source.md")
+        let destinationFile = tempDirectory.appendingPathComponent("destination.md")
+        
+        // Create source file
+        FileManager.default.createFile(atPath: sourceFile.path, contents: nil)
+        
+        XCTAssertTrue(fileSystemService.canMoveFile(from: sourceFile, to: destinationFile))
+    }
+    
+    func testCanMoveFileSameLocation() {
+        let file = tempDirectory.appendingPathComponent("file.md")
+        FileManager.default.createFile(atPath: file.path, contents: nil)
+        
+        XCTAssertFalse(fileSystemService.canMoveFile(from: file, to: file))
+    }
+    
+    func testCanMoveFileDestinationExists() {
+        let sourceFile = tempDirectory.appendingPathComponent("source.md")
+        let destinationFile = tempDirectory.appendingPathComponent("destination.md")
+        
+        // Create both files
+        FileManager.default.createFile(atPath: sourceFile.path, contents: nil)
+        FileManager.default.createFile(atPath: destinationFile.path, contents: nil)
+        
+        XCTAssertFalse(fileSystemService.canMoveFile(from: sourceFile, to: destinationFile))
+    }
+    
+    func testCanMoveFileSourceDoesNotExist() {
+        let sourceFile = tempDirectory.appendingPathComponent("nonexistent.md")
+        let destinationFile = tempDirectory.appendingPathComponent("destination.md")
+        
+        XCTAssertFalse(fileSystemService.canMoveFile(from: sourceFile, to: destinationFile))
+    }
+    
+    func testCanMoveDirectoryIntoItself() throws {
+        let parentDir = tempDirectory.appendingPathComponent("parent")
+        let childDir = parentDir.appendingPathComponent("child")
+        
+        try FileManager.default.createDirectory(at: parentDir, withIntermediateDirectories: true)
+        
+        // Cannot move parent into child
+        XCTAssertFalse(fileSystemService.canMoveFile(from: parentDir, to: childDir))
+    }
+    
+    func testCanMoveDirectoryIntoDescendant() throws {
+        let parentDir = tempDirectory.appendingPathComponent("parent")
+        let childDir = parentDir.appendingPathComponent("child")
+        let grandchildDir = childDir.appendingPathComponent("grandchild")
+        
+        try FileManager.default.createDirectory(at: childDir, withIntermediateDirectories: true)
+        
+        // Cannot move parent into grandchild
+        XCTAssertFalse(fileSystemService.canMoveFile(from: parentDir, to: grandchildDir))
+    }
+    
     // MARK: - Error Handling Tests
     
     func testFileSystemErrorDescriptions() {
         let url = URL(fileURLWithPath: "/test/path")
+        let url2 = URL(fileURLWithPath: "/test/path2")
         let underlyingError = NSError(domain: "TestDomain", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error"])
         
         let directoryError = FileSystemError.directoryLoadFailed(url, underlyingError)
@@ -206,6 +344,16 @@ final class FileSystemServiceTests: XCTestCase {
         
         let accessError = FileSystemError.accessDenied(url)
         XCTAssertTrue(accessError.errorDescription?.contains("/test/path") == true)
+        
+        let invalidMoveError = FileSystemError.invalidMove(url, url2)
+        XCTAssertTrue(invalidMoveError.errorDescription?.contains("path") == true)
+        
+        let fileExistsError = FileSystemError.fileExists(url)
+        XCTAssertTrue(fileExistsError.errorDescription?.contains("/test/path") == true)
+        
+        let moveFailedError = FileSystemError.moveFailed(url, url2, underlyingError)
+        XCTAssertTrue(moveFailedError.errorDescription?.contains("path") == true)
+        XCTAssertTrue(moveFailedError.errorDescription?.contains("Test error") == true)
     }
 }
 

@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import AppKit
 
 /// View model for managing file system navigation and directory tree state
 class FileSystemViewModel: ObservableObject {
@@ -15,10 +16,11 @@ class FileSystemViewModel: ObservableObject {
     @Published var showOnlyMarkdownFiles: Bool = false
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
+    @Published var refreshTrigger: UUID = UUID()  // Force view updates
     
     // MARK: - Private Properties
     
-    private let fileSystemService: FileSystemService
+    let fileSystemService: FileSystemService  // Made internal for FileDragDelegate access
     private var cancellables = Set<AnyCancellable>()
     private var fileSystemMonitorTask: Task<Void, Never>?
     private let searchDebouncer = PassthroughSubject<String, Never>()
@@ -306,6 +308,128 @@ class FileSystemViewModel: ObservableObject {
         // Refresh the directory if something changed
         if event.isCreated || event.isRemoved || event.isRenamed || event.isModified {
             await refresh()
+        }
+    }
+    
+    /// Find a node with the given URL in the tree
+    private func findNode(with url: URL, in node: DirectoryNode) -> DirectoryNode? {
+        // Normalize paths for comparison
+        let targetPath = url.standardizedFileURL.path
+        let nodePath = node.url.standardizedFileURL.path
+        
+        if nodePath == targetPath {
+            return node
+        }
+        
+        // Only search children if this node is a directory and has been loaded
+        if node.isDirectory && (node.isExpanded || !node.children.isEmpty) {
+            for child in node.children {
+                if let found = findNode(with: url, in: child) {
+                    return found
+                }
+            }
+        }
+        
+        return nil
+    }
+    
+    /// Refresh all expanded directories in the tree
+    private func refreshExpandedDirectories(in node: DirectoryNode) async {
+        // If this node is an expanded directory, refresh it
+        if node.isDirectory && node.isExpanded {
+            print("🔄 Refreshing expanded directory: \(node.name)")
+            await node.refresh()
+        }
+        
+        // Recursively refresh children
+        for child in node.children {
+            await refreshExpandedDirectories(in: child)
+        }
+    }
+    
+    /// Restore expanded state after reloading the tree
+    private func restoreExpandedState(in node: DirectoryNode, expandedIds: Set<UUID>) async {
+        if expandedIds.contains(node.id) && node.isDirectory {
+            node.isExpanded = true
+            await node.loadChildren()
+            
+            // Recursively restore state for children
+            for child in node.children {
+                await restoreExpandedState(in: child, expandedIds: expandedIds)
+            }
+        }
+    }
+    
+    // MARK: - File Operations
+    
+    /// Move a file or directory to a new location
+    /// - Parameters:
+    ///   - source: Source URL to move from
+    ///   - destination: Destination URL to move to
+    @MainActor
+    func moveFile(from source: URL, to destination: URL) async throws {
+        print("🎬 FileSystemViewModel.moveFile called")
+        print("   Source: \(source.path)")
+        print("   Destination: \(destination.path)")
+        
+        do {
+            // Show loading state
+            isLoading = true
+            errorMessage = nil
+            
+            print("📡 Calling fileSystemService.moveFile...")
+            // Perform the move
+            try await fileSystemService.moveFile(from: source, to: destination)
+            
+            print("✅ Move succeeded, refreshing directory tree...")
+            
+            // Force a complete refresh by reloading from the root
+            // This is the nuclear option but ensures the view updates
+            if let currentRoot = rootNode {
+                let rootURL = currentRoot.url
+                let currentExpanded = expandedNodes
+                
+                // Reload the entire tree
+                await navigateToDirectory(rootURL)
+                
+                // Restore expanded state and reload expanded directories
+                expandedNodes = currentExpanded
+                if let newRoot = rootNode {
+                    await restoreExpandedState(in: newRoot, expandedIds: currentExpanded)
+                }
+                
+                // Force SwiftUI to update by changing a published property
+                await MainActor.run {
+                    self.refreshTrigger = UUID()
+                }
+                
+                print("✅ Directory tree completely reloaded")
+            }
+            
+            // If the moved file was selected, clear selection
+            if selectedNode?.url == source {
+                print("🔄 Clearing selection as moved file was selected")
+                selectedNode = nil
+            }
+            
+            // Announce success for VoiceOver
+            let fileName = source.lastPathComponent
+            let destinationName = destination.deletingLastPathComponent().lastPathComponent
+            NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested, 
+                               userInfo: [.announcement: "Moved \(fileName) to \(destinationName)"])
+            
+            isLoading = false
+            print("✅ FileSystemViewModel.moveFile completed successfully")
+        } catch {
+            print("❌ FileSystemViewModel.moveFile failed: \(error)")
+            isLoading = false
+            errorMessage = error.localizedDescription
+            
+            // Announce error for VoiceOver
+            NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested,
+                               userInfo: [.announcement: "Failed to move file: \(error.localizedDescription)"])
+            
+            throw error
         }
     }
 }

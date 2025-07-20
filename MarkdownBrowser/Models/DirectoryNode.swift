@@ -117,11 +117,29 @@ class DirectoryNode: ObservableObject, Identifiable {
     func refresh() async {
         guard isDirectory else { return }
         
+        print("🔄 DirectoryNode.refresh() called for: \(name)")
+        
+        // Force SwiftUI to notice the change by explicitly triggering objectWillChange
+        objectWillChange.send()
+        
+        // Clear existing children to force a complete reload
         hasLoadedChildren = false
+        let wasExpanded = isExpanded
+        
+        // Create new array to ensure SwiftUI detects the change
         children = []
         
-        if isExpanded {
+        if wasExpanded {
+            // Re-load the children
             await loadChildren()
+            
+            // Ensure expanded state is maintained
+            isExpanded = true
+            
+            // Trigger again after loading to ensure the view updates
+            objectWillChange.send()
+            
+            print("✅ DirectoryNode.refresh() completed for: \(name), children count: \(children.count)")
         }
     }
 }

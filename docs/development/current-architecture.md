@@ -10,11 +10,12 @@ MarkdownBrowser is a macOS application built with SwiftUI that provides a dual-p
 graph TB
     subgraph "Application Layer"
         App[MarkdownBrowserApp]
-        ContentView[ContentView]
+        VSCodeExplorer[VSCodeStyleExplorer]
     end
     
     subgraph "View Layer"
-        DirectoryPanel[DirectoryPanel]
+        FileTreeView[FileTreeView]
+        FavoriteItemView[FavoriteItemView]
         FilePreviewView[FilePreviewView]
         ProperMarkdownEditor[ProperMarkdownEditor]
         EditWindowManager[EditWindowManager]
@@ -22,7 +23,7 @@ graph TB
     end
     
     subgraph "ViewModels"
-        FileSystemVM[FileSystemViewModel]
+        ExplorerModel[VSCodeExplorerModel]
         FavoritesVM[FavoritesViewModel]
         MarkdownVM[MarkdownViewModel]
         EditorVM[MarkdownEditorViewModel]
@@ -36,26 +37,29 @@ graph TB
     end
     
     subgraph "Models"
-        DirectoryNode[DirectoryNode]
+        FileNode[FileNode]
+        FavoriteDirectory[FavoriteDirectory]
         MarkdownDocument[MarkdownDocument]
         UserPreferences[UserPreferences]
     end
     
-    App --> ContentView
-    ContentView --> DirectoryPanel
-    ContentView --> FilePreviewView
+    App --> VSCodeExplorer
+    VSCodeExplorer --> FileTreeView
+    VSCodeExplorer --> FavoriteItemView
+    VSCodeExplorer --> FilePreviewView
     FilePreviewView --> MarkdownPreviewView
     FilePreviewView --> EditWindowManager
     EditWindowManager --> ProperMarkdownEditor
     
-    DirectoryPanel --> FileSystemVM
-    DirectoryPanel --> FavoritesVM
+    VSCodeExplorer --> ExplorerModel
+    VSCodeExplorer --> FavoritesVM
+    FileTreeView --> FavoritesVM
     FilePreviewView --> MarkdownVM
     ProperMarkdownEditor --> EditorVM
     
-    FileSystemVM --> FileSystemService
-    FileSystemVM --> DirectoryNode
+    ExplorerModel --> FileNode
     FavoritesVM --> UserPreferences
+    FavoritesVM --> FavoriteDirectory
     MarkdownVM --> MarkdownService
     MarkdownVM --> MarkdownDocument
     EditorVM --> MarkdownService
@@ -67,16 +71,27 @@ graph TB
 
 ```mermaid
 classDiagram
-    class ContentView {
-        +FileSystemViewModel fileSystemVM
+    class VSCodeStyleExplorer {
+        +VSCodeExplorerModel explorerModel
         +FavoritesViewModel favoritesVM
-        +FocusedPane focusedPane
+        +FileNode selectedFile
+        +CGFloat dividerPosition
         +body: View
     }
     
-    class DirectoryPanel {
-        +FileSystemViewModel fileSystemVM
+    class FileTreeView {
+        +FileNode node
+        +FileNode selectedFile
+        +Set~URL~ expandedNodes
+        +VSCodeExplorerModel explorerModel
         +FavoritesViewModel favoritesVM
+        +body: View
+    }
+    
+    class FavoriteItemView {
+        +FavoriteDirectory favorite
+        +FavoritesViewModel favoritesVM
+        +VSCodeExplorerModel explorerModel
         +body: View
     }
     
@@ -87,18 +102,10 @@ classDiagram
         +body: View
     }
     
-    class ProperMarkdownEditor {
-        +URL fileURL
-        +MarkdownEditorViewModel viewModel
-        +Environment dismiss
-        +CGFloat splitRatio
-        +body: View
-    }
-    
-    ContentView --> DirectoryPanel
-    ContentView --> FilePreviewView
+    VSCodeStyleExplorer --> FileTreeView
+    VSCodeStyleExplorer --> FavoriteItemView
+    VSCodeStyleExplorer --> FilePreviewView
     FilePreviewView --> EditWindowManager
-    EditWindowManager --> ProperMarkdownEditor
 ```
 
 ### ViewModels
@@ -131,13 +138,21 @@ classDiagram
         -detectsHTMLFiles()
     }
     
-    class FileSystemViewModel {
-        +DirectoryNode? rootNode
-        +DirectoryNode? selectedNode
-        +FileFilter fileFilter
-        +navigateToDirectory(URL)
-        +refreshDirectory()
-        +matchesFilter(DirectoryNode)
+    class VSCodeExplorerModel {
+        +FileNode? rootNode
+        +Set~URL~ expandedNodes
+        +openFolder()
+        +refreshRoot()
+    }
+    
+    class FavoritesViewModel {
+        +Array~FavoriteDirectory~ favorites
+        +FavoriteDirectory? selectedFavorite
+        +Bool isDraggingOverFavorites
+        +addFavorite(URL, String?)
+        +removeFavorite(FavoriteDirectory)
+        +navigateToFavoriteByShortcut(Int)
+        +handleDrop(Array~URL~)
     }
 ```
 
@@ -219,10 +234,14 @@ The app uses NotificationCenter for cross-component communication:
 
 ### Keyboard Shortcuts
 
-The app implements Cmd+S using SwiftUI's FocusedValue system:
-- `SaveActionKey`: Custom FocusedValueKey for save action
-- Main app adds File > Save menu item
-- ProperMarkdownEditor provides save action via `.focusedSceneValue`
+The app implements several keyboard shortcuts:
+- **Cmd+S**: Save using SwiftUI's FocusedValue system
+  - `SaveActionKey`: Custom FocusedValueKey for save action
+  - Main app adds File > Save menu item
+  - ProperMarkdownEditor provides save action via `.focusedSceneValue`
+- **Cmd+1 to Cmd+9**: Quick navigation to favorited directories
+  - Implemented using `.keyboardShortcut` modifier
+  - FavoritesViewModel manages shortcut assignments
 
 ### Known Issues
 
@@ -319,10 +338,70 @@ MarkdownBrowser.app/
 │   └── Info.plist
 ```
 
+## VSCode-Style Explorer
+
+The application uses a VSCode-inspired file explorer interface:
+
+```mermaid
+graph TD
+    subgraph "Explorer Layout"
+        Favorites[Favorites Section]
+        Divider[Draggable Divider]
+        Explorer[File Explorer]
+    end
+    
+    subgraph "Favorites Features"
+        DragDrop[Drag & Drop Support]
+        ContextMenu[Context Menu - Add to Favorites]
+        Shortcuts[Keyboard Shortcuts Cmd+1-9]
+        Persistence[UserPreferences Storage]
+    end
+    
+    Favorites --> DragDrop
+    Favorites --> Shortcuts
+    Favorites --> Persistence
+    Explorer --> ContextMenu
+```
+
+### Favorites System Architecture
+
+```mermaid
+classDiagram
+    class FavoriteDirectory {
+        +UUID id
+        +String name
+        +URL url
+        +Data bookmarkData
+        +Int? keyboardShortcut
+        +String displayName
+    }
+    
+    class FavoritesViewModel {
+        +addFavorite(URL, name?)
+        +removeFavorite(FavoriteDirectory)
+        +navigateToFavoriteByShortcut(Int)
+        +handleDrop([URL])
+        +resolveFavoriteURL(FavoriteDirectory)
+    }
+    
+    class UserPreferences {
+        +favoriteDirectories: [FavoriteDirectory]
+        +addFavoriteDirectory(URL, name?)
+        +removeFavoriteDirectory(FavoriteDirectory)
+        -assignNextAvailableShortcut()
+    }
+    
+    FavoritesViewModel --> UserPreferences
+    FavoritesViewModel --> FavoriteDirectory
+    UserPreferences --> FavoriteDirectory
+```
+
 ## Key Architectural Decisions
 
-1. **Separate Windows for Editing**: Edit mode opens in a new window managed by `EditWindowManager`
-2. **MVVM Pattern**: Clear separation between Views and ViewModels
-3. **Debounced Preview Updates**: 300ms delay prevents excessive rendering
-4. **App Bundle for Keyboard Focus**: Proper macOS app bundle ensures keyboard input works correctly
-5. **NSViewRepresentable for Text Editing**: Wraps NSTextView for better text editing capabilities than SwiftUI's TextEditor
+1. **VSCode-Style Interface**: Familiar developer interface with favorites section
+2. **Separate Windows for Editing**: Edit mode opens in a new window managed by `EditWindowManager`
+3. **MVVM Pattern**: Clear separation between Views and ViewModels
+4. **Debounced Preview Updates**: 300ms delay prevents excessive rendering
+5. **App Bundle for Keyboard Focus**: Proper macOS app bundle ensures keyboard input works correctly
+6. **NSViewRepresentable for Text Editing**: Wraps NSTextView for better text editing capabilities than SwiftUI's TextEditor
+7. **Security-Scoped Bookmarks**: Favorites use bookmarks for persistent access in sandboxed environment

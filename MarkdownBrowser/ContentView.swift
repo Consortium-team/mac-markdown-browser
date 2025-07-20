@@ -6,6 +6,7 @@ struct ContentView: View {
     @State private var focusedPane: FocusedPane = .directory
     @FocusState private var isDirectoryFocused: Bool
     @FocusState private var isPreviewFocused: Bool
+    @State private var showingErrorAlert = false
     
     enum FocusedPane {
         case directory
@@ -61,6 +62,22 @@ struct ContentView: View {
                 await fileSystemVM.navigateToDirectory(homeDirectory)
             }
         }
+        .onChange(of: fileSystemVM.errorMessage) { newValue in
+            showingErrorAlert = newValue != nil
+        }
+        .alert("Error", isPresented: $showingErrorAlert) {
+            Button("OK") {
+                fileSystemVM.errorMessage = nil
+            }
+        } message: {
+            Text(fileSystemVM.errorMessage ?? "An unknown error occurred")
+        }
+        .background(
+            FavoritesKeyboardShortcuts(
+                favoritesVM: favoritesVM,
+                fileSystemVM: fileSystemVM
+            )
+        )
     }
 }
 

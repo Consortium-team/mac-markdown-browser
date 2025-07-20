@@ -37,6 +37,7 @@ struct DirectoryPanel: View {
             
             // Directory Browser
             DirectoryBrowser(fileSystemVM: fileSystemVM)
+                .environmentObject(favoritesVM)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Color(NSColor.controlBackgroundColor))
@@ -52,6 +53,16 @@ extension View {
             } else {
                 NSCursor.pop()
             }
+        }
+    }
+    
+    /// Conditionally applies a modifier
+    @ViewBuilder
+    func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
+        if condition {
+            transform(self)
+        } else {
+            self
         }
     }
 }
