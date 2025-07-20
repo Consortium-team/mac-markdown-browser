@@ -6,12 +6,11 @@ struct MarkdownBrowserApp: App {
     
     var body: some Scene {
         WindowGroup {
-            // Using VSCode-style file explorer
-            VSCodeStyleExplorer()
+            VSCodeStyleExplorer() // Using VSCode-style file explorer
+            // ContentView() // Original implementation with favorites
             // NativeFileBrowser() // Native Mac file browser attempt
             // StandardContentView() // NavigationSplitView attempt
             // TestContentView() // OutlineGroup attempt
-            // ContentView() // Original implementation
         }
         .windowResizability(.contentSize)
         .windowToolbarStyle(.unified)

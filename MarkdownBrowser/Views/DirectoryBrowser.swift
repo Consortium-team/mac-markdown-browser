@@ -3,6 +3,7 @@ import UniformTypeIdentifiers
 
 struct DirectoryBrowser: View {
     @ObservedObject var fileSystemVM: FileSystemViewModel
+    @EnvironmentObject var favoritesVM: FavoritesViewModel
     @State private var searchQuery = ""
     @FocusState private var isFocused: Bool
     
@@ -41,6 +42,7 @@ struct DirectoryBrowser: View {
                             fileSystemVM: fileSystemVM,
                             searchQuery: searchQuery
                         )
+                        .environmentObject(favoritesVM)
                         .id(fileSystemVM.refreshTrigger) // Force view recreation on refresh
                     }
                     .padding(.vertical, 8)
@@ -71,6 +73,7 @@ struct DirectoryBrowser: View {
 struct DirectoryNodeView: View {
     @ObservedObject var node: DirectoryNode
     @ObservedObject var fileSystemVM: FileSystemViewModel
+    @EnvironmentObject var favoritesVM: FavoritesViewModel
     let searchQuery: String
     @Environment(\.indentLevel) var indentLevel: Int
     @State private var isDropTargeted = false
@@ -190,6 +193,10 @@ struct DirectoryNodeView: View {
                 }
                 .contextMenu {
                     if node.isDirectory {
+                        Button("Add to Favorites") {
+                            favoritesVM.addFavorite(node.url)
+                        }
+                        Divider()
                         Button("Open in Finder") {
                             NSWorkspace.shared.open(node.url)
                         }

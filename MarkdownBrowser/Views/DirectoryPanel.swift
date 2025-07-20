@@ -37,6 +37,7 @@ struct DirectoryPanel: View {
             
             // Directory Browser
             DirectoryBrowser(fileSystemVM: fileSystemVM)
+                .environmentObject(favoritesVM)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Color(NSColor.controlBackgroundColor))

@@ -4,12 +4,74 @@ import UniformTypeIdentifiers
 // MARK: - Main Explorer View
 struct VSCodeStyleExplorer: View {
     @StateObject private var explorerModel = VSCodeExplorerModel()
+    @StateObject private var favoritesVM = FavoritesViewModel()
     @State private var selectedFile: FileNode?
+    @State private var dividerPosition: CGFloat = 150
     
     var body: some View {
         HSplitView {
             // VSCode-style sidebar
             VStack(spacing: 0) {
+                // Favorites Section
+                VStack(spacing: 0) {
+                    // Favorites header
+                    HStack {
+                        Text("FAVORITES")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    
+                    // Favorites list
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 1) {
+                            if favoritesVM.favorites.isEmpty {
+                                Text("No favorites")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.secondary)
+                                    .italic()
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 4)
+                            } else {
+                                ForEach(favoritesVM.favorites) { favorite in
+                                    FavoriteItemView(
+                                        favorite: favorite,
+                                        favoritesVM: favoritesVM,
+                                        explorerModel: explorerModel
+                                    )
+                                }
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(height: dividerPosition)
+                    .onDrop(of: [.fileURL], delegate: FavoritesDropDelegate(
+                        favoritesVM: favoritesVM,
+                        dropTargetIndex: .constant(nil)
+                    ))
+                }
+                
+                // Draggable divider
+                Rectangle()
+                    .fill(Color.clear)
+                    .frame(height: 6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 1)
+                            .fill(Color.secondary.opacity(0.3))
+                            .frame(height: 1)
+                    )
+                    .contentShape(Rectangle())
+                    .cursor(NSCursor.resizeUpDown)
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                let newPosition = dividerPosition + value.translation.height
+                                dividerPosition = max(50, min(300, newPosition))
+                            }
+                    )
+                
                 // Explorer header
                 HStack {
                     Text("EXPLORER")
@@ -36,6 +98,7 @@ struct VSCodeStyleExplorer: View {
                                 selectedFile: $selectedFile,
                                 expandedNodes: $explorerModel.expandedNodes,
                                 explorerModel: explorerModel,
+                                favoritesVM: favoritesVM,
                                 level: 0
                             )
                         } else {
@@ -109,6 +172,20 @@ struct VSCodeStyleExplorer: View {
                 }
             }
         }
+        .background(
+            // Keyboard shortcuts for favorites
+            ForEach(1...9, id: \.self) { number in
+                EmptyView()
+                    .keyboardShortcut(KeyEquivalent(Character("\(number)")), modifiers: .command)
+                    .onTapGesture {} // Required for keyboard shortcut to work
+                    .task {
+                        if let url = favoritesVM.navigateToFavoriteByShortcut(number) {
+                            explorerModel.rootNode = FileNode(url: url)
+                            explorerModel.expandedNodes = [url]
+                        }
+                    }
+            }
+        )
     }
 }
 
@@ -118,6 +195,7 @@ struct FileTreeView: View {
     @Binding var selectedFile: FileNode?
     @Binding var expandedNodes: Set<URL>
     let explorerModel: VSCodeExplorerModel
+    let favoritesVM: FavoritesViewModel
     let level: Int
     
     @State private var isHovered = false
@@ -206,6 +284,24 @@ struct FileTreeView: View {
                 }
                 return true
             }
+            .contextMenu {
+                if node.isDirectory {
+                    Button("Add to Favorites") {
+                        favoritesVM.addFavorite(node.url)
+                    }
+                    Divider()
+                    Button("Open in Finder") {
+                        NSWorkspace.shared.open(node.url)
+                    }
+                } else {
+                    Button("Open in Default App") {
+                        NSWorkspace.shared.open(node.url)
+                    }
+                    Button("Show in Finder") {
+                        NSWorkspace.shared.activateFileViewerSelecting([node.url])
+                    }
+                }
+            }
             
             // Children
             if node.isDirectory && isExpanded {
@@ -215,6 +311,7 @@ struct FileTreeView: View {
                         selectedFile: $selectedFile,
                         expandedNodes: $expandedNodes,
                         explorerModel: explorerModel,
+                        favoritesVM: favoritesVM,
                         level: level + 1
                     )
                 }
@@ -369,6 +466,59 @@ class VSCodeExplorerModel: ObservableObject {
     func refreshRoot() {
         if let root = rootNode {
             rootNode = FileNode(url: root.url)
+        }
+    }
+}
+
+// MARK: - Favorite Item View
+struct FavoriteItemView: View {
+    let favorite: FavoriteDirectory
+    let favoritesVM: FavoritesViewModel
+    let explorerModel: VSCodeExplorerModel
+    
+    @State private var isHovered = false
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "folder.fill")
+                .font(.system(size: 14))
+                .foregroundColor(.accentColor)
+            
+            Text(favorite.displayName)
+                .font(.system(size: 13))
+                .lineLimit(1)
+                .truncationMode(.middle)
+            
+            Spacer()
+            
+            if let shortcut = favorite.keyboardShortcut {
+                Text("⌘\(shortcut)")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+        .padding(.horizontal, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 4)
+                .fill(isHovered ? Color(NSColor.selectedControlColor).opacity(0.5) : Color.clear)
+        )
+        .onHover { hovering in
+            isHovered = hovering
+        }
+        .onTapGesture {
+            if let url = favoritesVM.resolveFavoriteURL(favorite) {
+                explorerModel.rootNode = FileNode(url: url)
+                explorerModel.expandedNodes = [url]
+            }
+        }
+        .contextMenu {
+            Button("Remove from Favorites") {
+                favoritesVM.removeFavorite(favorite)
+            }
+            Button("Show in Finder") {
+                favoritesVM.showInFinder(favorite)
+            }
         }
     }
 }

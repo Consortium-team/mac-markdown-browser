@@ -72,6 +72,12 @@ struct ContentView: View {
         } message: {
             Text(fileSystemVM.errorMessage ?? "An unknown error occurred")
         }
+        .background(
+            FavoritesKeyboardShortcuts(
+                favoritesVM: favoritesVM,
+                fileSystemVM: fileSystemVM
+            )
+        )
     }
 }
 
