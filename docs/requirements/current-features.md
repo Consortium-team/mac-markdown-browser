@@ -15,12 +15,26 @@ This document describes the current state of implemented features in MarkdownBro
 - Real-time file system monitoring with FSEvents
 - Security-scoped bookmarks for persistent access
 
-#### 2. Favorites Management
-- Add directories to favorites
-- Remove favorites
-- Keyboard shortcuts (Cmd+1 through Cmd+9)
-- Persistent storage of favorites
-- Visual indication of favorited items
+#### 2. Favorites Management ✅
+- **VSCode-style favorites section** at top of sidebar
+  - Draggable divider to resize favorites area
+  - Empty state with helpful message
+- **Multiple ways to add favorites**:
+  - Right-click any directory → "Add to Favorites"
+  - Drag and drop directories into favorites section
+- **Favorites features**:
+  - Click to navigate instantly to favorited directory
+  - Keyboard shortcuts (Cmd+1 through Cmd+9) for quick access
+  - Shows shortcut indicator next to each favorite
+  - Custom names for favorites (default: directory name)
+- **Management options**:
+  - Right-click to remove from favorites
+  - Right-click to show in Finder
+  - Persistent storage across app sessions
+- **Visual design**:
+  - Consistent with VSCode explorer styling
+  - Hover effects for better interactivity
+  - Folder icons with accent color
 
 #### 3. Markdown Preview
 - Render markdown files with GitHub-flavored CSS
@@ -130,20 +144,24 @@ This document describes the current state of implemented features in MarkdownBro
 
 ### Current Workflow
 
-1. **Browse Files**: Navigate through directories in the left panel
-2. **Preview Markdown**: Click on any .md file to see rendered preview
-3. **Edit Markdown**: 
+1. **Browse Files**: Navigate through directories in the VSCode-style explorer
+2. **Manage Favorites**:
+   - Right-click any directory → "Add to Favorites"
+   - Or drag directories to the favorites section
+   - Use Cmd+1 through Cmd+9 to quickly jump to favorites
+3. **Preview Markdown**: Click on any .md file to see rendered preview
+4. **Edit Markdown**: 
    - Click "Edit" button in preview
    - Make changes in the left editor pane
    - See live preview updates on the right
-   - ⚠️ **Do not attempt to save** - will crash
+   - Save with Cmd+S or auto-save after 2 seconds
 
 ### Keyboard Shortcuts
 
 - **Cmd+1 to Cmd+9**: Jump to favorited directories
 - **ESC**: Close edit window
-- **Cmd+S**: Save (⚠️ **Currently crashes app**)
+- **Cmd+S**: Save markdown edits
 
 ## Development Status
 
-The application is in active development with core functionality implemented but critical issues preventing full usability. The save crash issue must be resolved before the editing feature can be considered complete.
+The application has evolved to use a VSCode-style explorer interface with robust favorites management. Core functionality is stable with markdown viewing, editing, and file management features working well. The app provides a familiar interface for developers while maintaining native macOS integration.

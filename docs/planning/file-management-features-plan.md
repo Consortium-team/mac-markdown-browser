@@ -153,7 +153,7 @@ This plan details the implementation of drag-and-drop file movement and PDF expo
 - [x] Add document metadata (title, creation date) (metadata included in HTML)
 - [x] Test with various document sizes
 
-### [ ] Phase 5: Testing and Polish (Day 3)
+### [DEFER TO FUTURE CR ] Phase 5: Testing and Polish (Day 3)
 
 #### [ ] Task 5.1: Comprehensive Testing
 **Priority**: High  
@@ -166,7 +166,7 @@ This plan details the implementation of drag-and-drop file movement and PDF expo
 - [ ] Accessibility testing with VoiceOver
 - [ ] Cross-version testing (macOS 13, 14, 15)
 
-#### [ ] Task 5.2: Documentation Updates
+#### [DEFER TO FUTURE CR ] Task 5.2: Documentation Updates
 **Priority**: Medium  
 **Effort**: 1 hour  
 **Dependencies**: Task 5.1  
@@ -175,6 +175,12 @@ This plan details the implementation of drag-and-drop file movement and PDF expo
 - [ ] Update user documentation
 - [ ] Add inline code documentation
 - [ ] Create demo video/screenshots
+
+## Known Issues
+- Mermaid diagrams not rendered in PDF Export
+
+## Key changes
+- Deprecated ContentView() and now use VSCodeStyleExplorer
 
 ## Risk Mitigation
 
