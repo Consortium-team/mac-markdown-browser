@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import AppKit
 
 /// View model for managing file system navigation and directory tree state
 class FileSystemViewModel: ObservableObject {
@@ -18,7 +19,7 @@ class FileSystemViewModel: ObservableObject {
     
     // MARK: - Private Properties
     
-    private let fileSystemService: FileSystemService
+    let fileSystemService: FileSystemService  // Made internal for FileDragDelegate access
     private var cancellables = Set<AnyCancellable>()
     private var fileSystemMonitorTask: Task<Void, Never>?
     private let searchDebouncer = PassthroughSubject<String, Never>()
@@ -306,6 +307,49 @@ class FileSystemViewModel: ObservableObject {
         // Refresh the directory if something changed
         if event.isCreated || event.isRemoved || event.isRenamed || event.isModified {
             await refresh()
+        }
+    }
+    
+    // MARK: - File Operations
+    
+    /// Move a file or directory to a new location
+    /// - Parameters:
+    ///   - source: Source URL to move from
+    ///   - destination: Destination URL to move to
+    @MainActor
+    func moveFile(from source: URL, to destination: URL) async throws {
+        do {
+            // Show loading state
+            isLoading = true
+            errorMessage = nil
+            
+            // Perform the move
+            try await fileSystemService.moveFile(from: source, to: destination)
+            
+            // Refresh the directory tree to show the changes
+            await refresh()
+            
+            // If the moved file was selected, clear selection
+            if selectedNode?.url == source {
+                selectedNode = nil
+            }
+            
+            // Announce success for VoiceOver
+            let fileName = source.lastPathComponent
+            let destinationName = destination.deletingLastPathComponent().lastPathComponent
+            NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested, 
+                               userInfo: [.announcement: "Moved \(fileName) to \(destinationName)"])
+            
+            isLoading = false
+        } catch {
+            isLoading = false
+            errorMessage = error.localizedDescription
+            
+            // Announce error for VoiceOver
+            NSAccessibility.post(element: NSApp as Any, notification: .announcementRequested,
+                               userInfo: [.announcement: "Failed to move file: \(error.localizedDescription)"])
+            
+            throw error
         }
     }
 }

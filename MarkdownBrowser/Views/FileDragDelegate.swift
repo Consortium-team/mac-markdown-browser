@@ -6,6 +6,7 @@ class FileDragDelegate: DropDelegate {
     let targetNode: DirectoryNode
     let fileSystemVM: FileSystemViewModel
     @Binding var isTargeted: Bool
+    private var hoverTimer: Timer?
     
     init(targetNode: DirectoryNode, fileSystemVM: FileSystemViewModel, isTargeted: Binding<Bool>) {
         self.targetNode = targetNode
@@ -34,6 +35,16 @@ class FileDragDelegate: DropDelegate {
         withAnimation(.easeInOut(duration: 0.2)) {
             isTargeted = true
         }
+        
+        // Set up spring-loaded folder expansion
+        if targetNode.isDirectory && !targetNode.isExpanded {
+            hoverTimer?.invalidate()
+            hoverTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { _ in
+                Task { @MainActor in
+                    await self.targetNode.toggleExpanded()
+                }
+            }
+        }
     }
     
     /// Called when a drag exits the drop target
@@ -41,6 +52,10 @@ class FileDragDelegate: DropDelegate {
         withAnimation(.easeInOut(duration: 0.2)) {
             isTargeted = false
         }
+        
+        // Cancel spring-loaded folder expansion
+        hoverTimer?.invalidate()
+        hoverTimer = nil
     }
     
     /// Called when the drag location changes within the drop target
@@ -53,16 +68,20 @@ class FileDragDelegate: DropDelegate {
     func performDrop(info: DropInfo) -> Bool {
         isTargeted = false
         
-        let providers = info.itemProviders(for: [.fileURL])
-        var success = false
+        // Cancel any pending hover timer
+        hoverTimer?.invalidate()
+        hoverTimer = nil
         
+        let providers = info.itemProviders(for: [.fileURL])
+        
+        // Process each provider
         for provider in providers {
             provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { (item, error) in
                 if let data = item as? Data,
                    let url = URL(dataRepresentation: data, relativeTo: nil) {
                     
-                    // Perform validation on the main thread
-                    DispatchQueue.main.async {
+                    // Perform validation and move on the main thread
+                    Task { @MainActor in
                         // Prevent dropping a file into itself
                         if url == self.targetNode.url {
                             print("Cannot move a directory into itself")
@@ -82,22 +101,25 @@ class FileDragDelegate: DropDelegate {
                         // Check if destination already exists
                         if FileManager.default.fileExists(atPath: destinationURL.path) {
                             print("A file with the same name already exists at the destination")
+                            self.fileSystemVM.errorMessage = "A file named '\(fileName)' already exists in \(self.targetNode.name)"
                             return
                         }
                         
                         // Perform the move operation
-                        Task {
-                            // This is a placeholder - we'll implement the actual move in Task 2.1
-                            print("Would move \(url) to \(destinationURL)")
-                            // await self.fileSystemVM.moveFile(from: url, to: destinationURL)
-                            success = true
+                        do {
+                            try await self.fileSystemVM.moveFile(from: url, to: destinationURL)
+                            print("Successfully moved \(url.lastPathComponent) to \(self.targetNode.name)")
+                        } catch {
+                            print("Failed to move file: \(error.localizedDescription)")
+                            self.fileSystemVM.errorMessage = error.localizedDescription
                         }
                     }
                 }
             }
         }
         
-        return success
+        // Return true to indicate we accepted the drop (even if individual moves might fail)
+        return true
     }
     
     /// Checks if a URL is a child of another URL

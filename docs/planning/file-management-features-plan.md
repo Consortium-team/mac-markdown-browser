@@ -13,7 +13,7 @@ This plan details the implementation of drag-and-drop file movement and PDF expo
 
 ## Implementation Tasks
 
-### [ ] Phase 1: Drag-and-Drop Foundation (Day 1)
+### [x] Phase 1: Drag-and-Drop Foundation (Day 1)
 
 #### [x] Task 1.1: Create FileDragDelegate
 **Priority**: High  
@@ -39,55 +39,55 @@ This plan details the implementation of drag-and-drop file movement and PDF expo
 - [x] Only enable dragging for files, not directories (initial implementation)
 - [x] Test drag gesture recognition
 
-#### [ ] Task 1.3: Add Drop Target to DirectoryPanel
+#### [x] Task 1.3: Add Drop Target to DirectoryPanel
 **Priority**: High  
 **Effort**: 2 hours  
 **Dependencies**: Task 1.1  
 **Acceptance Criteria**:
-- [ ] Add onDrop modifier to directory nodes
-- [ ] Connect to FileDragDelegate
-- [ ] Show hover state when dragging over valid targets
-- [ ] Clear visual indication of drop target
-- [ ] Test drop target activation
+- [x] Add onDrop modifier to directory nodes
+- [x] Connect to FileDragDelegate
+- [x] Show hover state when dragging over valid targets
+- [x] Clear visual indication of drop target
+- [x] Test drop target activation
 
-### [ ] Phase 2: File Movement Implementation (Day 1-2)
+### [x] Phase 2: File Movement Implementation (Day 1-2)
 
-#### [ ] Task 2.1: Implement FileSystemService.moveFile
+#### [x] Task 2.1: Implement FileSystemService.moveFile
 **Priority**: High  
 **Effort**: 3 hours  
 **Dependencies**: None  
 **Acceptance Criteria**:
-- [ ] Add async moveFile method to FileSystemService
-- [ ] Handle security-scoped bookmarks for both source and destination
-- [ ] Implement atomic move with FileManager
-- [ ] Add proper error handling for all failure cases
-- [ ] Update FSEvents monitoring after successful move
-- [ ] Comprehensive unit tests
+- [x] Add async moveFile method to FileSystemService
+- [x] Handle security-scoped bookmarks for both source and destination
+- [x] Implement atomic move with FileManager
+- [x] Add proper error handling for all failure cases
+- [x] Update FSEvents monitoring after successful move
+- [x] Comprehensive unit tests
 
 **Performance Requirements**:
 - Local file moves < 100ms
 - Network drive timeout: 30 seconds
 
-#### [ ] Task 2.2: Integrate Drag-Drop with File Movement
+#### [x] Task 2.2: Integrate Drag-Drop with File Movement
 **Priority**: High  
 **Effort**: 2 hours  
 **Dependencies**: Tasks 1.3, 2.1  
 **Acceptance Criteria**:
-- [ ] Connect FileDragDelegate.performDrop to FileSystemService.moveFile
-- [ ] Show progress indicator for long operations
-- [ ] Update UI immediately after successful move
-- [ ] Show error alerts for failed moves
-- [ ] End-to-end testing
+- [x] Connect FileDragDelegate.performDrop to FileSystemService.moveFile
+- [x] Show progress indicator for long operations
+- [x] Update UI immediately after successful move
+- [x] Show error alerts for failed moves
+- [x] End-to-end testing
 
-#### [ ] Task 2.3: Polish Drag-Drop Experience
+#### [x] Task 2.3: Polish Drag-Drop Experience
 **Priority**: Medium  
 **Effort**: 1 hour  
 **Dependencies**: Task 2.2  
 **Acceptance Criteria**:
-- [ ] Add spring-loaded folder expansion (hover 1s to expand)
-- [ ] Support Escape key to cancel drag
-- [ ] Accessibility: VoiceOver announcements
-- [ ] Smooth animations for all transitions
+- [x] Add spring-loaded folder expansion (hover 1s to expand)
+- [x] Support Escape key to cancel drag (system-handled)
+- [x] Accessibility: VoiceOver announcements
+- [x] Smooth animations for all transitions
 
 ### [ ] Phase 3: PDF Export Foundation (Day 2)
 

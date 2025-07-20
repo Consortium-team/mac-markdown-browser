@@ -126,6 +126,126 @@ class FileSystemService: ObservableObject {
         return try fileManager.attributesOfItem(atPath: url.path)
     }
     
+    /// Move a file or directory to a new location
+    /// - Parameters:
+    ///   - source: Source URL to move from
+    ///   - destination: Destination URL to move to
+    /// - Throws: FileSystemError if move fails
+    @MainActor
+    func moveFile(from source: URL, to destination: URL) async throws {
+        // Check specific error conditions first
+        if fileManager.fileExists(atPath: destination.path) {
+            throw FileSystemError.fileExists(destination)
+        }
+        
+        // Validate that we can move the file
+        guard canMoveFile(from: source, to: destination) else {
+            throw FileSystemError.invalidMove(source, destination)
+        }
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            fileSystemQueue.async { [weak self] in
+                guard let self = self else {
+                    continuation.resume(throwing: FileSystemError.serviceUnavailable)
+                    return
+                }
+                
+                do {
+                    // Check if source has security-scoped access
+                    let sourceAccessible = source.startAccessingSecurityScopedResource()
+                    defer {
+                        if sourceAccessible {
+                            source.stopAccessingSecurityScopedResource()
+                        }
+                    }
+                    
+                    // Check if destination directory has security-scoped access
+                    let destDir = destination.deletingLastPathComponent()
+                    let destAccessible = destDir.startAccessingSecurityScopedResource()
+                    defer {
+                        if destAccessible {
+                            destDir.stopAccessingSecurityScopedResource()
+                        }
+                    }
+                    
+                    // Perform the move
+                    try self.fileManager.moveItem(at: source, to: destination)
+                    
+                    // Notify FSEvents monitoring about the change
+                    // The monitoring will automatically pick up the change
+                    
+                    continuation.resume(returning: ())
+                } catch CocoaError.fileWriteFileExists {
+                    // File already exists at destination
+                    continuation.resume(throwing: FileSystemError.fileExists(destination))
+                } catch CocoaError.fileWriteNoPermission {
+                    // No permission to write to destination
+                    continuation.resume(throwing: FileSystemError.accessDenied(destination))
+                } catch {
+                    // Other errors
+                    continuation.resume(throwing: FileSystemError.moveFailed(source, destination, error))
+                }
+            }
+        }
+    }
+    
+    /// Check if a file can be moved from source to destination
+    /// - Parameters:
+    ///   - source: Source URL
+    ///   - destination: Destination URL
+    /// - Returns: True if the move is valid
+    func canMoveFile(from source: URL, to destination: URL) -> Bool {
+        // Can't move to the same location
+        if source == destination {
+            return false
+        }
+        
+        // Can't move a directory into itself or its children
+        if isChildOf(child: destination, parent: source) {
+            return false
+        }
+        
+        // Check if source exists
+        guard fileManager.fileExists(atPath: source.path) else {
+            return false
+        }
+        
+        // Check if destination already exists
+        if fileManager.fileExists(atPath: destination.path) {
+            return false
+        }
+        
+        // Check if we have read access to source
+        guard fileManager.isReadableFile(atPath: source.path) else {
+            return false
+        }
+        
+        // Check if we have write access to destination directory
+        let destDir = destination.deletingLastPathComponent()
+        guard fileManager.isWritableFile(atPath: destDir.path) else {
+            return false
+        }
+        
+        return true
+    }
+    
+    /// Check if a URL is a child of another URL
+    /// - Parameters:
+    ///   - child: Potential child URL
+    ///   - parent: Potential parent URL
+    /// - Returns: True if child is under parent
+    private func isChildOf(child: URL, parent: URL) -> Bool {
+        let childPath = child.path
+        let parentPath = parent.path
+        
+        // Ensure we're comparing normalized paths
+        let normalizedChildPath = (childPath as NSString).standardizingPath
+        let normalizedParentPath = (parentPath as NSString).standardizingPath
+        
+        // A path is a child if it starts with the parent path followed by a separator
+        return normalizedChildPath.hasPrefix(normalizedParentPath + "/")
+    }
+    
     // MARK: - Private Methods
     
     private func startFSEventsMonitoring(at url: URL, callback: @escaping (FileSystemEvent) -> Void) {
@@ -240,6 +360,9 @@ enum FileSystemError: Error, LocalizedError {
     case bookmarkResolutionFailed
     case serviceUnavailable
     case accessDenied(URL)
+    case invalidMove(URL, URL)
+    case fileExists(URL)
+    case moveFailed(URL, URL, Error)
     
     var errorDescription: String? {
         switch self {
@@ -253,6 +376,12 @@ enum FileSystemError: Error, LocalizedError {
             return "File system service is unavailable"
         case .accessDenied(let url):
             return "Access denied to \(url.path)"
+        case .invalidMove(let source, let destination):
+            return "Cannot move \(source.lastPathComponent) to \(destination.path)"
+        case .fileExists(let url):
+            return "A file already exists at \(url.path)"
+        case .moveFailed(let source, let destination, let error):
+            return "Failed to move \(source.lastPathComponent) to \(destination.path): \(error.localizedDescription)"
         }
     }
 }

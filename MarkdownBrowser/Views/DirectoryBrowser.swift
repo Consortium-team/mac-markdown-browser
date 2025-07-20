@@ -177,6 +177,8 @@ struct DirectoryNodeView: View {
                         .cornerRadius(6)
                         .shadow(radius: 4)
                     })
+                    .accessibilityLabel("Draggable file: \(node.name)")
+                    .accessibilityHint("Drag to move to another folder")
                 }
                 .if(node.isDirectory) { view in
                     view.onDrop(of: [.fileURL], delegate: FileDragDelegate(
@@ -184,6 +186,8 @@ struct DirectoryNodeView: View {
                         fileSystemVM: fileSystemVM,
                         isTargeted: $isDropTargeted
                     ))
+                    .accessibilityLabel("Drop target folder: \(node.name)")
+                    .accessibilityHint("Drop files here to move them into this folder")
                 }
                 .contextMenu {
                     if node.isDirectory {
