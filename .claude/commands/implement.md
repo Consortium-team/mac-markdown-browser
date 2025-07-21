@@ -16,7 +16,7 @@ As the Tech Lead (following .kiro/steering/tech.md), I will:
 5. Implement the next task/sub-task
 6. Write tests for each major task
 7. Ensure tests pass before moving to next task
-8. Check off completed tasks in the plan
+8. Check off completed tasks and subtask in the plan as you complete them 
 9. Follow Apple HIG for all UI decisions
 
 I will continue until the current work session is complete or the plan is finished.

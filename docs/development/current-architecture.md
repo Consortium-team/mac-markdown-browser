@@ -172,6 +172,7 @@ classDiagram
         +loadDirectory(URL) DirectoryNode
         +startMonitoring(URL)
         +stopMonitoring(URL)
+        -enumerationOptions: Based on UserPreferences.showHiddenFiles
     }
     
     class MermaidRenderer {
@@ -242,6 +243,10 @@ The app implements several keyboard shortcuts:
 - **Cmd+1 to Cmd+9**: Quick navigation to favorited directories
   - Implemented using `.keyboardShortcut` modifier
   - FavoritesViewModel manages shortcut assignments
+- **Cmd+Shift+.**: Toggle hidden files visibility
+  - Added to View menu in MarkdownBrowserApp
+  - Toggles UserPreferences.showHiddenFiles
+  - Triggers automatic file tree refresh
 
 ### Known Issues
 
@@ -386,9 +391,12 @@ classDiagram
     
     class UserPreferences {
         +favoriteDirectories: [FavoriteDirectory]
+        +showHiddenFiles: Bool = true
         +addFavoriteDirectory(URL, name?)
         +removeFavoriteDirectory(FavoriteDirectory)
         -assignNextAvailableShortcut()
+        +loadFileFiltering()
+        +resetToDefaults()
     }
     
     FavoritesViewModel --> UserPreferences
@@ -405,3 +413,6 @@ classDiagram
 5. **App Bundle for Keyboard Focus**: Proper macOS app bundle ensures keyboard input works correctly
 6. **NSViewRepresentable for Text Editing**: Wraps NSTextView for better text editing capabilities than SwiftUI's TextEditor
 7. **Security-Scoped Bookmarks**: Favorites use bookmarks for persistent access in sandboxed environment
+8. **Dynamic File Enumeration**: FileManager enumeration options controlled by UserPreferences.showHiddenFiles
+   - All file loading methods respect the preference
+   - Automatic tree refresh on preference change via @ObservedObject

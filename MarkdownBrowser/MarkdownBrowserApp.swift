@@ -3,6 +3,7 @@ import SwiftUI
 @main
 struct MarkdownBrowserApp: App {
     @FocusedValue(\.saveAction) var saveAction
+    @StateObject private var preferences = UserPreferences.shared
     
     var body: some Scene {
         WindowGroup {
@@ -22,6 +23,11 @@ struct MarkdownBrowserApp: App {
                 }
                 .keyboardShortcut("s", modifiers: .command)
                 .disabled(saveAction == nil)
+            }
+            
+            CommandMenu("View") {
+                Toggle("Show Hidden Files", isOn: $preferences.showHiddenFiles)
+                    .keyboardShortcut(".", modifiers: [.command, .shift])
             }
         }
     }

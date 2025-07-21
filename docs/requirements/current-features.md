@@ -14,6 +14,12 @@ This document describes the current state of implemented features in MarkdownBro
 - File type icons and visual indicators
 - Real-time file system monitoring with FSEvents
 - Security-scoped bookmarks for persistent access
+- **Hidden files visibility** (new):
+  - Shows hidden files and directories by default
+  - Toggle visibility via View menu → "Show Hidden Files"
+  - Keyboard shortcut: Cmd+Shift+.
+  - Preference persists across app sessions
+  - File tree refreshes instantly when toggled
 
 #### 2. Favorites Management ✅
 - **VSCode-style favorites section** at top of sidebar
@@ -161,6 +167,7 @@ This document describes the current state of implemented features in MarkdownBro
 - **Cmd+1 to Cmd+9**: Jump to favorited directories
 - **ESC**: Close edit window
 - **Cmd+S**: Save markdown edits
+- **Cmd+Shift+.**: Toggle hidden files visibility
 
 ## Development Status
 

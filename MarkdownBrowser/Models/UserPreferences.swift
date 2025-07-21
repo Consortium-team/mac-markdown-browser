@@ -35,7 +35,7 @@ class UserPreferences: ObservableObject {
     }
     
     // MARK: - File Filtering
-    @Published var showHiddenFiles: Bool = false {
+    @Published var showHiddenFiles: Bool = true {
         didSet {
             userDefaults.set(showHiddenFiles, forKey: UserPreferencesKeys.showHiddenFiles)
         }
@@ -144,7 +144,12 @@ class UserPreferences: ObservableObject {
     }
     
     private func loadFileFiltering() {
-        showHiddenFiles = userDefaults.bool(forKey: UserPreferencesKeys.showHiddenFiles)
+        // Default to true if not set
+        if userDefaults.object(forKey: UserPreferencesKeys.showHiddenFiles) != nil {
+            showHiddenFiles = userDefaults.bool(forKey: UserPreferencesKeys.showHiddenFiles)
+        } else {
+            showHiddenFiles = true
+        }
         
         if let extensions = userDefaults.array(forKey: UserPreferencesKeys.fileExtensionFilter) as? [String] {
             fileExtensionFilter = Set(extensions)
@@ -308,7 +313,7 @@ class UserPreferences: ObservableObject {
         selectedTheme = .system
         windowFrame = CGRect(x: 100, y: 100, width: 1000, height: 700)
         leftPaneWidth = 300
-        showHiddenFiles = false
+        showHiddenFiles = true
         fileExtensionFilter = ["md", "markdown", "txt"]
         editorFontSize = 14
         editorFontFamily = "SF Mono"

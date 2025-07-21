@@ -27,10 +27,11 @@ struct FileItem: Identifiable, Hashable {
     mutating func loadChildren() throws {
         guard isDirectory else { return }
         
+        let options: FileManager.DirectoryEnumerationOptions = UserPreferences.shared.showHiddenFiles ? [] : [.skipsHiddenFiles]
         let contents = try FileManager.default.contentsOfDirectory(
             at: url,
             includingPropertiesForKeys: [.isDirectoryKey],
-            options: [.skipsHiddenFiles]
+            options: options
         )
         
         children = contents
