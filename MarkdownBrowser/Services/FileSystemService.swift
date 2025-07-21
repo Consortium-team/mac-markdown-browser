@@ -24,10 +24,11 @@ class FileSystemService: ObservableObject {
                 }
                 
                 do {
+                    let options: FileManager.DirectoryEnumerationOptions = UserPreferences.shared.showHiddenFiles ? [] : [.skipsHiddenFiles]
                     let contents = try self.fileManager.contentsOfDirectory(
                         at: url,
                         includingPropertiesForKeys: [URLResourceKey.isDirectoryKey, URLResourceKey.contentModificationDateKey],
-                        options: [.skipsHiddenFiles]
+                        options: options
                     )
                     
                     let nodes = contents.map { fileURL -> DirectoryNode in

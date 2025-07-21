@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct VSCodeStyleExplorer: View {
     @StateObject private var explorerModel = VSCodeExplorerModel()
     @StateObject private var favoritesVM = FavoritesViewModel()
+    @ObservedObject private var preferences = UserPreferences.shared
     @State private var selectedFile: FileNode?
     @State private var dividerPosition: CGFloat = 150
     
@@ -186,6 +187,10 @@ struct VSCodeStyleExplorer: View {
                     }
             }
         )
+        .onChange(of: preferences.showHiddenFiles) { _ in
+            // Refresh the file tree when hidden files preference changes
+            explorerModel.refreshRoot()
+        }
     }
 }
 
@@ -385,10 +390,11 @@ struct FileNode: Identifiable, Hashable {
         guard isDirectory else { return }
         
         do {
+            let options: FileManager.DirectoryEnumerationOptions = UserPreferences.shared.showHiddenFiles ? [] : [.skipsHiddenFiles]
             let contents = try FileManager.default.contentsOfDirectory(
                 at: url,
                 includingPropertiesForKeys: [.isDirectoryKey],
-                options: [.skipsHiddenFiles]
+                options: options
             )
             
             children = contents

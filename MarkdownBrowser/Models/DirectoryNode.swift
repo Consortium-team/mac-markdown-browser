@@ -34,10 +34,11 @@ class DirectoryNode: ObservableObject, Identifiable {
         defer { isLoading = false }
         
         do {
+            let options: FileManager.DirectoryEnumerationOptions = UserPreferences.shared.showHiddenFiles ? [] : [.skipsHiddenFiles]
             let contents = try FileManager.default.contentsOfDirectory(
                 at: url,
                 includingPropertiesForKeys: [.isDirectoryKey, .nameKey],
-                options: [.skipsHiddenFiles]
+                options: options
             )
             
             let sortedContents = contents.sorted { url1, url2 in

@@ -39,7 +39,7 @@ As the Lead Software Developer for MarkdownBrowser, you embody best practices in
 7. **Web Search for Common Issues and Best Practices**
    - When encountering implementation difficulties, search reputable sites
    - Look for community solutions to common problems
-   - Research best practices from authoritative sources (Apple Developer Forums, Stack Overflow, Ray Wenderlich, Hacking with Swift)
+   - Research best practices from authoritative sources (Apple Developer Forums, Stack Overflow, Ray Wenderlich ( https://www.kodeco.com), Hacking with Swift)
    - Verify solutions align with current Swift/SwiftUI versions
 
 ## Technology Stack & Build System

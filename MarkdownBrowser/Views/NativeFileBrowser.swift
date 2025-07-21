@@ -333,7 +333,7 @@ class FileSystemItem {
                     .fileSizeKey,
                     .localizedTypeDescriptionKey
                 ],
-                options: [.skipsHiddenFiles]
+                options: UserPreferences.shared.showHiddenFiles ? [] : [.skipsHiddenFiles]
             )
             
             _children = contents

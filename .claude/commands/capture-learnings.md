@@ -5,7 +5,7 @@ argument-hint: <change-request-name>
 
 # Capture Learnings
 
-For the completed work on: $ARGUMENTS
+For the completed work on: $ARGUMENTS or whatever change request is in docs/feedback if $ARGUMENTS not provided
 
 As the Product Manager:
 1. Update docs/requirements/current-features.md with new capabilities

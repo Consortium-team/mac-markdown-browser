@@ -61,6 +61,34 @@ final class FileSystemServiceTests: XCTestCase {
         XCTAssertFalse(sortedNodes[2].isDirectory)
     }
     
+    func testLoadDirectoryWithHiddenFiles() async throws {
+        // Create test files including hidden files
+        let regularFile = tempDirectory.appendingPathComponent("regular.md")
+        let hiddenFile = tempDirectory.appendingPathComponent(".hidden.md")
+        let gitFolder = tempDirectory.appendingPathComponent(".git")
+        let gitIgnore = tempDirectory.appendingPathComponent(".gitignore")
+        let envFile = tempDirectory.appendingPathComponent(".env")
+        
+        try "# Regular file".write(to: regularFile, atomically: true, encoding: .utf8)
+        try "# Hidden file".write(to: hiddenFile, atomically: true, encoding: .utf8)
+        try FileManager.default.createDirectory(at: gitFolder, withIntermediateDirectories: true, attributes: nil)
+        try "*.log".write(to: gitIgnore, atomically: true, encoding: .utf8)
+        try "SECRET=value".write(to: envFile, atomically: true, encoding: .utf8)
+        
+        let nodes = try await fileSystemService.loadDirectory(tempDirectory)
+        
+        // Should now include hidden files
+        XCTAssertEqual(nodes.count, 5, "Should find 5 items including hidden files")
+        
+        let fileNames = nodes.map { $0.name }.sorted()
+        XCTAssertEqual(fileNames, [".env", ".git", ".gitignore", ".hidden.md", "regular.md"])
+        
+        // Verify hidden directory is recognized as directory
+        let gitNode = nodes.first { $0.name == ".git" }
+        XCTAssertNotNil(gitNode)
+        XCTAssertTrue(gitNode!.isDirectory, ".git should be recognized as directory")
+    }
+    
     func testLoadNonExistentDirectory() async {
         let nonExistentURL = tempDirectory.appendingPathComponent("nonexistent")
         
@@ -175,6 +203,42 @@ final class FileSystemServiceTests: XCTestCase {
             Task {
                 do {
                     _ = try await fileSystemService.loadDirectory(tempDirectory)
+                    expectation.fulfill()
+                } catch {
+                    XCTFail("Failed to load directory: \(error)")
+                }
+            }
+            
+            wait(for: [expectation], timeout: 1.0)
+        }
+    }
+    
+    func testLoadDirectoryPerformanceWithHiddenFiles() throws {
+        // Create many files including hidden files for performance testing
+        for i in 0..<50 {
+            let file = tempDirectory.appendingPathComponent("file\(i).md")
+            try "# File \(i)".write(to: file, atomically: true, encoding: .utf8)
+        }
+        
+        // Add 50 hidden files
+        for i in 0..<50 {
+            let hiddenFile = tempDirectory.appendingPathComponent(".hidden\(i).md")
+            try "# Hidden File \(i)".write(to: hiddenFile, atomically: true, encoding: .utf8)
+        }
+        
+        // Add some common hidden directories
+        let gitDir = tempDirectory.appendingPathComponent(".git")
+        try FileManager.default.createDirectory(at: gitDir, withIntermediateDirectories: true)
+        let vscodeDir = tempDirectory.appendingPathComponent(".vscode")
+        try FileManager.default.createDirectory(at: vscodeDir, withIntermediateDirectories: true)
+        
+        measure {
+            let expectation = XCTestExpectation(description: "Directory loaded with hidden files")
+            
+            Task {
+                do {
+                    let nodes = try await fileSystemService.loadDirectory(tempDirectory)
+                    XCTAssertEqual(nodes.count, 102, "Should load all 102 items including hidden files")
                     expectation.fulfill()
                 } catch {
                     XCTFail("Failed to load directory: \(error)")
