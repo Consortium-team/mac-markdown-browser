@@ -28,7 +28,7 @@ class DirectoryNode: ObservableObject, Identifiable {
     /// Lazily loads children for directory nodes
     @MainActor
     func loadChildren() async {
-        guard isDirectory && !hasLoadedChildren && !isLoading else { return }
+        guard isDirectory && !hasLoadedChildren else { return }
         
         isLoading = true
         defer { isLoading = false }
@@ -120,28 +120,32 @@ class DirectoryNode: ObservableObject, Identifiable {
         
         print("🔄 DirectoryNode.refresh() called for: \(name)")
         
+        // Show loading state
+        isLoading = true
+        
         // Force SwiftUI to notice the change by explicitly triggering objectWillChange
         objectWillChange.send()
         
-        // Clear existing children to force a complete reload
-        hasLoadedChildren = false
+        // Remember expanded state
         let wasExpanded = isExpanded
         
-        // Create new array to ensure SwiftUI detects the change
+        // Clear existing state
+        hasLoadedChildren = false
         children = []
         
-        if wasExpanded {
-            // Re-load the children
-            await loadChildren()
-            
-            // Ensure expanded state is maintained
-            isExpanded = true
-            
-            // Trigger again after loading to ensure the view updates
-            objectWillChange.send()
-            
-            print("✅ DirectoryNode.refresh() completed for: \(name), children count: \(children.count)")
-        }
+        // Always reload children to get fresh state
+        await loadChildren()
+        
+        // Restore expanded state
+        isExpanded = wasExpanded
+        
+        // Trigger again after loading to ensure the view updates
+        objectWillChange.send()
+        
+        // Hide loading state
+        isLoading = false
+        
+        print("✅ DirectoryNode.refresh() completed for: \(name), children count: \(children.count)")
     }
 }
 

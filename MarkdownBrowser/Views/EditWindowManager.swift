@@ -35,7 +35,12 @@ class EditWindowManager: NSObject {
         if fileURL.isCSVFile {
             contentView = AnyView(ProperCSVEditor(fileURL: fileURL))
         } else {
-            contentView = AnyView(ProperMarkdownEditor(fileURL: fileURL))
+            // Use synchronized editor if scroll sync is enabled
+            if UserPreferences.shared.enableScrollSync {
+                contentView = AnyView(SynchronizedMarkdownEditView(fileURL: fileURL))
+            } else {
+                contentView = AnyView(ProperMarkdownEditor(fileURL: fileURL))
+            }
         }
         
         let hostingController = NSHostingController(rootView: contentView)
