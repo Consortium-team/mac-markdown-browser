@@ -23,6 +23,8 @@ Implement $ARGUMENTS following the plan with integrated security verification.
    - Review security requirements from design document
    - Verify on correct feature branch
    - Use TodoWrite to load tasks from checklist
+   - **IMPORTANT**: TodoWrite is for tracking during implementation
+   - **IMPORTANT**: The actual checklist file in `/docs/planning/[feature]-checklist.md` is the source of truth and must be updated
    - Use Context7 if you need to look up APIs, libraries, or packages
    - Research reputable online sources for best practices and examples for similar functionality
 
@@ -48,16 +50,29 @@ Implement $ARGUMENTS following the plan with integrated security verification.
    - **Security Scan**: Run automated security checks
    - Test: Write tests as specified in checklist
    - **Security Test**: Verify security controls work
+   **If task has "⚠️ REQUIRES HUMAN VERIFICATION":**
+   - Complete the implementation
+   - Run any automated tests you can
+   - **STOP and inform the user**: "This task requires human verification: [what to check]"
+   - Wait for user confirmation before marking complete
+   - Do NOT mark as complete without user confirmation
+   
+   **If task can be automated:**
    - **VERIFY: Actually test the implementation**
-     - For servers: Start them and verify they run
-     - For endpoints: Make actual HTTP requests and verify responses
-     - For UI components: Verify they render without errors
-     - For database operations: Test connections and queries
-     - **For auth**: Test with valid/invalid tokens
-     - **For inputs**: Test with malicious payloads
+     - For SwiftUI views: Build and verify they render without crashes
+     - For file operations: Test with actual files and verify correct behavior
+     - For UI components: Verify they respond to user interaction
+     - For directory operations: Test with nested folders and verify traversal
+     - **For file access**: Test with sandboxed/non-sandboxed paths
+     - **For WebView content**: Test with malicious HTML/script injection
      - Document the exact commands used and outputs received
-   - Complete: ONLY mark as completed after successful verification
-   - If verification fails: Keep as in_progress and document the issue
+   - Complete: After successful verification:
+     1. Mark as completed in TodoWrite
+     2. **UPDATE THE CHECKLIST FILE**: Edit `/docs/planning/[feature]-checklist.md`
+        - Change `[ ]` to `[x]` for this task
+        - Add ✅ emoji after the task description
+        - Add verification notes with actual output
+   - If verification fails: Keep as in_progress and document the issue in BOTH places
 
 5. **Code Standards with Security**
    - Swift strict type safety
@@ -90,6 +105,18 @@ Implement $ARGUMENTS following the plan with integrated security verification.
    ```
 
 7. **Verification Requirements**
+
+**⚠️ CRITICAL: VERIFICATION IS MANDATORY ⚠️**
+   
+   **STOP! Before marking ANY task as complete, you MUST:**
+   1. Run an actual command that tests the functionality
+   2. See the expected output with your own "eyes"
+   3. Document the exact command and output
+   
+   **If you cannot run a verification command, the task is NOT complete.**
+   **If you did not see actual output, the task is NOT complete.**
+   **If you're assuming it works, the task is NOT complete.**
+   
    **NEVER mark a task complete without verification:**
    - **SwiftUI Views**: Must render without runtime errors
    - **File Operations**: Must handle both success and error cases
@@ -97,6 +124,22 @@ Implement $ARGUMENTS following the plan with integrated security verification.
    - **Build Tasks**: Must complete without warnings/errors
    - **Test Tasks**: Must see all tests passing
    - **Security Tasks**: Must verify sandboxing works
+   
+   **Example of WRONG behavior:**
+   ```
+   ❌ "I added the refresh button to Explorer" → Mark as complete
+   ❌ "The file preview should work now" → Mark as complete
+   ❌ "I configured the entitlements" → Mark as complete
+   ```
+   
+   **Example of CORRECT behavior:**
+   ```
+   ✅ "I added the refresh button to Explorer"
+   → Run: swift build && swift run
+   → Click refresh button, add a file in Finder
+   → Click refresh again, see new file appear
+   → NOW mark as complete
+   ```
    
    **Security Verification Examples**:
    ```bash
@@ -131,13 +174,40 @@ Implement $ARGUMENTS following the plan with integrated security verification.
    ```
 
 9. **Progress Tracking**
-   - Update checklist file with ✅ ONLY after verification
+   **⚠️ CRITICAL: TWO CHECKLISTS TO UPDATE ⚠️**
+   
+   **There are TWO task tracking systems you MUST update:**
+   1. **TodoWrite Tool**: For real-time progress tracking during implementation
+   2. **Checklist File**: The actual markdown file in `/docs/planning/[feature]-checklist.md`
+   
+   **⚠️ BEFORE MARKING ANY TASK COMPLETE ⚠️**
+   
+   Ask yourself these questions:
+   1. Did I run a command to verify this works? (If no, STOP)
+   2. Did I see actual output proving it works? (If no, STOP)
+   3. Can I paste the exact command and output? (If no, STOP)
+   
+   **TodoWrite Rules (Implementation Tracking):**
+   - A task stays "in_progress" until verification succeeds
+   - If verification fails, document the failure and keep as "in_progress"
+   - ONLY mark "completed" after seeing success output
+   
+   **Checklist File Update Rules (Source of Truth):**
+   - **MANDATORY**: Update the actual checklist file in `/docs/planning/[feature]-checklist.md`
+   - Change `[ ]` to `[x]` for completed tasks
+   - Update checklist file with ✅ emoji ONLY after verification
    - Add verification notes showing exact test performed
+   - Include the actual output you observed
    - **Document security tests performed**
    - Document blockers or issues
-   - Keep TodoWrite in sync
    - **Update security assessment if new risks found**
-   - **Golden Rule**: If you didn't test it (including security), it's not complete
+   
+   **BOTH MUST BE UPDATED**: When you complete a task:
+   1. Mark it complete in TodoWrite
+   2. Update the checkbox to `[x]` in `/docs/planning/[feature]-checklist.md`
+   3. Add ✅ emoji and verification notes to the checklist file
+   
+   **ENFORCEMENT**: If you mark something complete without verification output, you are violating the core principle of this workflow
 
 ## Security Integration
 

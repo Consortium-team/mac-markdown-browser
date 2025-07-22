@@ -20,6 +20,9 @@ graph TB
         ProperMarkdownEditor[ProperMarkdownEditor]
         EditWindowManager[EditWindowManager]
         MarkdownPreviewView[MarkdownPreviewView]
+        CSVSplitView[CSVSplitView]
+        CSVEditorView[CSVEditorView]
+        CSVPreviewView[CSVPreviewView]
     end
     
     subgraph "ViewModels"
@@ -27,6 +30,7 @@ graph TB
         FavoritesVM[FavoritesViewModel]
         MarkdownVM[MarkdownViewModel]
         EditorVM[MarkdownEditorViewModel]
+        CSVVM[CSVViewModel]
     end
     
     subgraph "Services"
@@ -34,6 +38,8 @@ graph TB
         MarkdownService[MarkdownService]
         MermaidRenderer[MermaidRenderer]
         ScrollSync[ScrollSynchronizer]
+        CSVParser[CSVParser]
+        PerformanceMonitor[PerformanceMonitor]
     end
     
     subgraph "Models"
@@ -41,6 +47,7 @@ graph TB
         FavoriteDirectory[FavoriteDirectory]
         MarkdownDocument[MarkdownDocument]
         UserPreferences[UserPreferences]
+        CSVDocument[CSVDocument]
     end
     
     App --> VSCodeExplorer
@@ -48,6 +55,9 @@ graph TB
     VSCodeExplorer --> FavoriteItemView
     VSCodeExplorer --> FilePreviewView
     FilePreviewView --> MarkdownPreviewView
+    FilePreviewView --> CSVSplitView
+    CSVSplitView --> CSVEditorView
+    CSVSplitView --> CSVPreviewView
     FilePreviewView --> EditWindowManager
     EditWindowManager --> ProperMarkdownEditor
     
@@ -56,6 +66,7 @@ graph TB
     FileTreeView --> FavoritesVM
     FilePreviewView --> MarkdownVM
     ProperMarkdownEditor --> EditorVM
+    CSVSplitView --> CSVVM
     
     ExplorerModel --> FileNode
     FavoritesVM --> UserPreferences
@@ -63,6 +74,9 @@ graph TB
     MarkdownVM --> MarkdownService
     MarkdownVM --> MarkdownDocument
     EditorVM --> MarkdownService
+    CSVVM --> CSVParser
+    CSVVM --> CSVDocument
+    CSVVM --> PerformanceMonitor
 ```
 
 ## Component Details
@@ -141,6 +155,7 @@ classDiagram
     class VSCodeExplorerModel {
         +FileNode? rootNode
         +Set~URL~ expandedNodes
+        +Bool isRefreshing
         +openFolder()
         +refreshRoot()
     }
@@ -178,6 +193,20 @@ classDiagram
     class MermaidRenderer {
         +renderMermaidDiagram(String) String
         -generateMermaidHTML(String) String
+    }
+    
+    class CSVParser {
+        +parseCSV(String, CSVDelimiter) CSVData
+        +detectDelimiter(String) CSVDelimiter
+        -handleQuotedValues(String) String
+        -sanitizeCell(String) String
+    }
+    
+    class PerformanceMonitor {
+        +measureBlock(String, () -> T) T
+        +logMetrics()
+        -trackMemoryUsage()
+        -trackExecutionTime()
     }
     
     MarkdownService --> MermaidHTMLGenerator
@@ -298,6 +327,7 @@ classDiagram
 ### Supported Document Types
 - **Markdown**: `.md`, `.markdown` - Parsed and rendered with GitHub-style CSS
 - **HTML**: `.html`, `.htm` - Rendered directly in WKWebView
+- **CSV**: `.csv`, `.tsv` - Parsed and displayed as tables with syntax highlighting
 
 ## Technology Stack
 

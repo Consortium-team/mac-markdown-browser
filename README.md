@@ -75,6 +75,14 @@ swift build -c release
 
 # Run the application
 swift run
+
+# Build app bundle
+./create-app-bundle.sh
+```
+
+### Running
+```bash
+open MarkdownBrowswer.app
 ```
 
 ### Testing
@@ -277,6 +285,23 @@ MDBrowser follows MVVM architecture with these key components:
 - **ViewModels**: Business logic and state management
 
 See `docs/development/current-architecture.md` for detailed architecture documentation.
+
+## Known Issues
+
+### Display Update Issues
+- **Drag and Drop**: When moving files between directories via drag and drop, the display doesn't immediately update. You need to expand/collapse either the source or destination directory to see the changes reflected.
+
+### Editor Limitations
+- **No Synchronized Scrolling**: The edit view doesn't support synchronized scrolling between the editor and preview panes, even though the infrastructure exists in the codebase.
+
+### Performance Issues
+- **No Lazy Loading**: Directories are not lazy-loaded, which can cause delays when browsing large directory structures. The app may rebuild the entire home directory tree, causing intermittent performance issues.
+- **First Launch Delay**: The initial launch of `MDBrowser.app` can take up to a minute, during which macOS may request various permissions. Subsequent launches are significantly faster.
+
+### Planned Improvements
+These issues are tracked and will be addressed in future releases:
+- Phase 3: Synchronized Scrolling (deferred to future change request)
+- Phase 4: Directory Loading Performance with lazy loading (deferred to future change request)
 
 ## Contributing
 

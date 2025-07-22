@@ -118,7 +118,38 @@ Create software design document and implementation plan for $ARGUMENTS using pro
    - Monitoring: [Security metrics to track]
    ```
 
-7. **Checklist Template**
+7. **Verification Requirements**
+   
+   When creating checklists, explicitly mark which tasks require human verification:
+   
+   **Tasks that typically REQUIRE HUMAN VERIFICATION:**
+   - Visual UI/UX verification (button placement, colors, spacing)
+   - Keyboard shortcut functionality (Cmd+1-9 for favorites)
+   - Drag and drop behavior for favorites
+   - File picker dialog interaction
+   - Window resizing and split view behavior
+   - Dark mode appearance
+   - Accessibility with VoiceOver
+   - Performance with large directories (1000+ files)
+   - App bundle signing and notarization
+   
+   **Tasks that CAN BE AUTOMATED:**
+   - Unit tests for models and services
+   - File system operations testing
+   - Build processes (swift build)
+   - SwiftLint formatting checks
+   - Markdown parsing tests
+   - CSV parsing tests
+   - Security-scoped bookmark tests
+   
+   **Marking Human Verification:**
+   ```markdown
+   - [ ] Task requiring human check
+     - Acceptance: [criteria]
+     - **⚠️ REQUIRES HUMAN VERIFICATION**: [What to check]
+   ```
+
+8. **Checklist Template**
    ```markdown
    # [Feature Name] Implementation Checklist
    
@@ -129,23 +160,23 @@ Create software design document and implementation plan for $ARGUMENTS using pro
      - Acceptance: Controls map to each threat
    
    ## Implementation Tasks
-   - [ ] Task 1 (Size: S)
-     - [ ] Implement input validation
-       - Acceptance: All inputs sanitized
-       - Security Test: XSS prevention verified
-     - [ ] Add authentication checks
-       - Acceptance: All endpoints protected
-       - Security Test: Auth bypass tested
-     - Dependencies: [none/list]
+   - [ ] Task 1: File Browser UI (Size: S)
+     - [ ] Implement directory tree view
+       - Acceptance: Folders expand/collapse correctly
+       - Security Test: Verify sandboxed paths only
+     - [ ] Add file type icons
+       - Acceptance: Correct icons for .md, .csv, .html
+       - **⚠️ REQUIRES HUMAN VERIFICATION**: Visual appearance
+     - Dependencies: DirectoryNode model
    
-   - [ ] Task 2 (Size: M)
-     - [ ] Database encryption setup
-       - Acceptance: Sensitive fields encrypted
-       - Security Test: Encryption verified
-     - [ ] API rate limiting
-       - Acceptance: Rate limits enforced
-       - Security Test: DDoS protection tested
-     - Tests: [unit/integration/security]
+   - [ ] Task 2: Markdown Preview (Size: M)
+     - [ ] Implement WebView with CSP
+       - Acceptance: Markdown renders as HTML
+       - Security Test: XSS attempts blocked
+     - [ ] Add synchronized scrolling
+       - Acceptance: Editor and preview scroll together
+       - **⚠️ REQUIRES HUMAN VERIFICATION**: Smooth scrolling behavior
+     - Tests: Unit tests for HTML generation, UI tests for rendering
    
    ## Security Verification
    - [ ] Run SAST scan (Size: S)
