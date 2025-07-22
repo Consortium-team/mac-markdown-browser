@@ -28,11 +28,6 @@ struct MarkdownBrowserApp: App {
             CommandMenu("View") {
                 Toggle("Show Hidden Files", isOn: $preferences.showHiddenFiles)
                     .keyboardShortcut(".", modifiers: [.command, .shift])
-                
-                Divider()
-                
-                Toggle("Synchronized Scrolling", isOn: $preferences.enableScrollSync)
-                    .keyboardShortcut("y", modifiers: .command)
             }
         }
     }

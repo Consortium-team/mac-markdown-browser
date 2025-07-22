@@ -67,12 +67,6 @@ class UserPreferences: ObservableObject {
         }
     }
     
-    @Published var enableScrollSync: Bool = true {
-        didSet {
-            userDefaults.set(enableScrollSync, forKey: UserPreferencesKeys.enableScrollSync)
-        }
-    }
-    
     // MARK: - Preview Settings
     @Published var previewTheme: PreviewTheme = .github {
         didSet {
@@ -166,7 +160,7 @@ class UserPreferences: ObservableObject {
         editorFontSize = userDefaults.object(forKey: UserPreferencesKeys.editorFontSize) as? CGFloat ?? 14
         editorFontFamily = userDefaults.string(forKey: UserPreferencesKeys.editorFontFamily) ?? "SF Mono"
         enableSyntaxHighlighting = userDefaults.object(forKey: UserPreferencesKeys.enableSyntaxHighlighting) as? Bool ?? true
-        enableScrollSync = userDefaults.object(forKey: UserPreferencesKeys.enableScrollSync) as? Bool ?? true
+// Removed enableScrollSync - feature not fully implemented
     }
     
     private func loadPreviewSettings() {
@@ -325,7 +319,7 @@ class UserPreferences: ObservableObject {
         editorFontSize = 14
         editorFontFamily = "SF Mono"
         enableSyntaxHighlighting = true
-        enableScrollSync = true
+// Removed enableScrollSync - feature not fully implemented
         previewTheme = .github
         enableMermaidDiagrams = true
         lastOpenedDirectory = nil
@@ -390,7 +384,7 @@ private struct UserPreferencesKeys {
     static let editorFontSize = "editorFontSize"
     static let editorFontFamily = "editorFontFamily"
     static let enableSyntaxHighlighting = "enableSyntaxHighlighting"
-    static let enableScrollSync = "enableScrollSync"
+// Removed enableScrollSync - feature not fully implemented
     static let previewTheme = "previewTheme"
     static let enableMermaidDiagrams = "enableMermaidDiagrams"
     static let lastOpenedDirectory = "lastOpenedDirectory"
@@ -399,7 +393,7 @@ private struct UserPreferencesKeys {
     static let allKeys = [
         favoriteDirectories, selectedTheme, windowFrame, leftPaneWidth,
         showHiddenFiles, fileExtensionFilter, editorFontSize, editorFontFamily,
-        enableSyntaxHighlighting, enableScrollSync, previewTheme, enableMermaidDiagrams,
+        enableSyntaxHighlighting, previewTheme, enableMermaidDiagrams,
         lastOpenedDirectory, lastOpenedFile
     ]
 }
