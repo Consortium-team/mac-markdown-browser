@@ -137,8 +137,9 @@ struct DirectoryNodeView: View {
                     // Loading indicator
                     if node.isLoading {
                         ProgressView()
-                            .scaleEffect(0.5)
+                            .scaleEffect(0.7)
                             .frame(width: 16, height: 16)
+                            .progressViewStyle(CircularProgressViewStyle())
                     }
                 }
                 .padding(.horizontal, 12)
@@ -201,11 +202,14 @@ struct DirectoryNodeView: View {
                             NSWorkspace.shared.open(node.url)
                         }
                         Divider()
-                        Button("Refresh") {
+                        Button(node.isLoading ? "Refreshing..." : "Refresh") {
                             Task {
                                 await node.refresh()
+                                // Force UI update
+                                fileSystemVM.refreshTrigger = UUID()
                             }
                         }
+                        .disabled(node.isLoading)
                     } else {
                         Button("Open in Default App") {
                             NSWorkspace.shared.open(node.url)

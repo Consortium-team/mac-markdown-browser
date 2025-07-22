@@ -160,6 +160,7 @@ class UserPreferences: ObservableObject {
         editorFontSize = userDefaults.object(forKey: UserPreferencesKeys.editorFontSize) as? CGFloat ?? 14
         editorFontFamily = userDefaults.string(forKey: UserPreferencesKeys.editorFontFamily) ?? "SF Mono"
         enableSyntaxHighlighting = userDefaults.object(forKey: UserPreferencesKeys.enableSyntaxHighlighting) as? Bool ?? true
+// Removed enableScrollSync - feature not fully implemented
     }
     
     private func loadPreviewSettings() {
@@ -318,6 +319,7 @@ class UserPreferences: ObservableObject {
         editorFontSize = 14
         editorFontFamily = "SF Mono"
         enableSyntaxHighlighting = true
+// Removed enableScrollSync - feature not fully implemented
         previewTheme = .github
         enableMermaidDiagrams = true
         lastOpenedDirectory = nil
@@ -382,6 +384,7 @@ private struct UserPreferencesKeys {
     static let editorFontSize = "editorFontSize"
     static let editorFontFamily = "editorFontFamily"
     static let enableSyntaxHighlighting = "enableSyntaxHighlighting"
+// Removed enableScrollSync - feature not fully implemented
     static let previewTheme = "previewTheme"
     static let enableMermaidDiagrams = "enableMermaidDiagrams"
     static let lastOpenedDirectory = "lastOpenedDirectory"

@@ -27,6 +27,20 @@ final class FileTypeTests: XCTestCase {
         XCTAssertTrue(htmlURL.isSupportedDocument)
     }
     
+    func testFileTypeDetectionForCSV() {
+        let csvURL = URL(fileURLWithPath: "/test/data.csv")
+        let tsvURL = URL(fileURLWithPath: "/test/data.tsv")
+        
+        XCTAssertEqual(csvURL.fileType, .csv)
+        XCTAssertEqual(tsvURL.fileType, .csv)
+        XCTAssertTrue(csvURL.isCSVFile)
+        XCTAssertTrue(tsvURL.isCSVFile)
+        XCTAssertFalse(csvURL.isMarkdownFile)
+        XCTAssertFalse(csvURL.isHTMLFile)
+        XCTAssertTrue(csvURL.isSupportedDocument)
+        XCTAssertTrue(tsvURL.isSupportedDocument)
+    }
+    
     func testFileTypeDetectionForDirectory() {
         // This test would need actual file system access or mocking
         // For now, we'll test the logic with a simulated directory
@@ -44,12 +58,14 @@ final class FileTypeTests: XCTestCase {
         XCTAssertEqual(noExtURL.fileType, .other)
         XCTAssertFalse(txtURL.isMarkdownFile)
         XCTAssertFalse(txtURL.isHTMLFile)
+        XCTAssertFalse(txtURL.isCSVFile)
         XCTAssertFalse(txtURL.isSupportedDocument)
     }
     
     func testFileTypeIcons() {
         XCTAssertEqual(FileType.markdown.iconName, "doc.text")
         XCTAssertEqual(FileType.html.iconName, "doc.richtext")
+        XCTAssertEqual(FileType.csv.iconName, "tablecells")
         XCTAssertEqual(FileType.directory.iconName, "folder")
         XCTAssertEqual(FileType.other.iconName, "doc")
     }
@@ -57,6 +73,7 @@ final class FileTypeTests: XCTestCase {
     func testFileTypeSupport() {
         XCTAssertTrue(FileType.markdown.isSupported)
         XCTAssertTrue(FileType.html.isSupported)
+        XCTAssertTrue(FileType.csv.isSupported)
         XCTAssertFalse(FileType.directory.isSupported)
         XCTAssertFalse(FileType.other.isSupported)
     }
@@ -65,9 +82,13 @@ final class FileTypeTests: XCTestCase {
         let upperMD = URL(fileURLWithPath: "/test/document.MD")
         let upperHTML = URL(fileURLWithPath: "/test/page.HTML")
         let mixedHTM = URL(fileURLWithPath: "/test/page.HtM")
+        let upperCSV = URL(fileURLWithPath: "/test/data.CSV")
+        let mixedTSV = URL(fileURLWithPath: "/test/data.TsV")
         
         XCTAssertEqual(upperMD.fileType, .markdown)
         XCTAssertEqual(upperHTML.fileType, .html)
         XCTAssertEqual(mixedHTM.fileType, .html)
+        XCTAssertEqual(upperCSV.fileType, .csv)
+        XCTAssertEqual(mixedTSV.fileType, .csv)
     }
 }

@@ -4,6 +4,7 @@ import Foundation
 enum FileType: CaseIterable {
     case markdown
     case html
+    case csv
     case directory
     case other
     
@@ -21,6 +22,8 @@ enum FileType: CaseIterable {
                 self = .markdown
             case "html", "htm":
                 self = .html
+            case "csv", "tsv":
+                self = .csv
             default:
                 self = .other
             }
@@ -34,6 +37,8 @@ enum FileType: CaseIterable {
             return "doc.text"
         case .html:
             return "doc.richtext"
+        case .csv:
+            return "tablecells"
         case .directory:
             return "folder"
         case .other:
@@ -44,7 +49,7 @@ enum FileType: CaseIterable {
     /// Check if this is a supported document type
     var isSupported: Bool {
         switch self {
-        case .markdown, .html:
+        case .markdown, .html, .csv:
             return true
         case .directory, .other:
             return false
@@ -64,6 +69,10 @@ extension URL {
     
     var isHTMLFile: Bool {
         fileType == .html
+    }
+    
+    var isCSVFile: Bool {
+        fileType == .csv
     }
     
     var isSupportedDocument: Bool {

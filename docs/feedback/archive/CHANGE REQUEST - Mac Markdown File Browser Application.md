@@ -68,8 +68,8 @@ Based on comprehensive market analysis conducted July 15, 2025:
 - **Persistent Storage**: Preferences saved between application sessions
 
 #### **Specific Use Cases:**
-- **Development Directory**: `/Users/sonjayatandon/dev/`
-- **Client Files Directory**: `~/ConsortiumTeam_ClientFiles/`
+- **Development Directory**: `/Users/[user name]/[dev home directory]/`
+- **Client Files Directory**: `~/[client files directory/`
 - **Custom Project Directories**: User-defined favorites
 - **Recent Locations**: Automatic tracking of frequently accessed directories
 

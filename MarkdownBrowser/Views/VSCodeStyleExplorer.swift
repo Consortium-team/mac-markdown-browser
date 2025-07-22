@@ -79,11 +79,29 @@ struct VSCodeStyleExplorer: View {
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(.secondary)
                     Spacer()
-                    Button(action: { explorerModel.refreshRoot() }) {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.system(size: 11))
+                    
+                    if explorerModel.isRefreshing {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                            .frame(width: 14, height: 14)
+                    } else {
+                        Button(action: { 
+                            explorerModel.refreshRoot() 
+                        }) {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 11))
+                                .foregroundColor(.primary)
+                        }
+                        .buttonStyle(.borderless)
+                        .onHover { hovering in
+                            if hovering {
+                                NSCursor.pointingHand.push()
+                            } else {
+                                NSCursor.pop()
+                            }
+                        }
+                        .help("Refresh Explorer")
                     }
-                    .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
@@ -372,6 +390,7 @@ struct FileNode: Identifiable, Hashable {
     let fileExtension: String
     
     var children: [FileNode] = []
+    var isLoading: Bool = false
     
     init(url: URL) {
         self.url = url
@@ -407,7 +426,8 @@ struct FileNode: Identifiable, Hashable {
                     }
                     let ext = url.pathExtension.lowercased()
                     return ext == "md" || ext == "markdown" || ext == "html" || ext == "htm" || 
-                           ext == "txt" || ext == "json" || ext == "yml" || ext == "yaml"
+                           ext == "txt" || ext == "json" || ext == "yml" || ext == "yaml" ||
+                           ext == "csv" || ext == "tsv"
                 }
                 .map { FileNode(url: $0) }
         } catch {
@@ -430,6 +450,8 @@ struct FileNode: Identifiable, Hashable {
             return "curlybraces"
         case "yml", "yaml":
             return "doc.badge.gearshape"
+        case "csv", "tsv":
+            return "tablecells"
         default:
             return "doc"
         }
@@ -469,11 +491,35 @@ class VSCodeExplorerModel: ObservableObject {
         }
     }
     
+    @Published var isRefreshing: Bool = false
+    
     func refreshRoot() {
-        if let root = rootNode {
-            rootNode = FileNode(url: root.url)
+        guard let root = rootNode else { return }
+        
+        // Show loading state
+        isRefreshing = true
+        
+        // Preserve expanded state before refresh
+        let wasExpanded = expandedNodes
+        
+        // Clear the root node to force a complete UI refresh
+        rootNode = nil
+        
+        // Create a completely new root node - this forces FileNode to reload from disk
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            let newRoot = FileNode(url: root.url)
+            self.rootNode = newRoot
+            
+            // Restore expanded state
+            self.expandedNodes = wasExpanded
+            
+            // Hide loading state after a brief delay
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                self.isRefreshing = false
+            }
         }
     }
+    
 }
 
 // MARK: - Favorite Item View

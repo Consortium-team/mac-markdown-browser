@@ -30,8 +30,15 @@ class EditWindowManager: NSObject {
         window.center()
         window.isReleasedWhenClosed = false // Important: prevent premature deallocation
         
-        // Create content view
-        let contentView = ProperMarkdownEditor(fileURL: fileURL)
+        // Create content view based on file type
+        let contentView: AnyView
+        if fileURL.isCSVFile {
+            contentView = AnyView(ProperCSVEditor(fileURL: fileURL))
+        } else {
+            // Always use ProperMarkdownEditor for now
+            contentView = AnyView(ProperMarkdownEditor(fileURL: fileURL))
+        }
+        
         let hostingController = NSHostingController(rootView: contentView)
         window.contentViewController = hostingController
         
