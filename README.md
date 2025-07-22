@@ -82,7 +82,7 @@ swift run
 
 ### Running
 ```bash
-open MarkdownBrowswer.app
+open MarkdownBrowser.app
 ```
 
 ### Testing
