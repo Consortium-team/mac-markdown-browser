@@ -134,7 +134,7 @@ This is a macOS Markdown browser application built with SwiftUI, following MVVM 
 4. **WKWebView** for preview rendering with Mermaid.js integration
 
 ### Development Status
-Currently implementing core models and services. UI views are placeholders. See `.kiro/specs/mac-markdown-browser/tasks.md` for detailed implementation plan with requirement mappings.
+Core models and services are implemented. The application features a fully functional CSV preview system, Markdown editing, favorites management, and hidden files visibility. See `docs/planning/` for current implementation plans and `docs/requirements/current-features.md` for detailed feature status.
 
 ## Important Considerations
 

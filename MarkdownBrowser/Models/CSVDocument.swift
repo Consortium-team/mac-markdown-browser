@@ -42,6 +42,9 @@ class CSVDocument: ObservableObject, Identifiable {
     let url: URL
     let name: String
     
+    // Security: Maximum file size allowed (50MB)
+    private static let maxFileSize: Int64 = 50 * 1024 * 1024
+    
     @Published var content: String = ""
     @Published var csvData: CSVData = CSVData()
     @Published var renderedHTML: String = ""
@@ -71,6 +74,14 @@ class CSVDocument: ObservableObject, Identifiable {
         error = nil
         
         do {
+            // Security: Check file size before loading
+            let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+            let fileSize = attributes[.size] as? Int64 ?? 0
+            
+            guard fileSize <= Self.maxFileSize else {
+                throw DocumentError.fileTooLarge("File size (\(fileSize / 1024 / 1024)MB) exceeds maximum allowed size (\(Self.maxFileSize / 1024 / 1024)MB)")
+            }
+            
             let fileContent = try String(contentsOf: url, encoding: .utf8)
             content = fileContent
             originalContent = fileContent
@@ -80,8 +91,7 @@ class CSVDocument: ObservableObject, Identifiable {
             csvData.delimiter = detectDelimiter(in: fileContent)
             parseCSV()
             
-            // Get file modification date
-            let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+            // Get file modification date (already retrieved attributes above)
             lastModified = attributes[.modificationDate] as? Date
             
             startWatchingFile()

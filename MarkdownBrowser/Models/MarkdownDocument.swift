@@ -173,6 +173,7 @@ enum DocumentError: LocalizedError {
     case saveFailed(String)
     case conflictDetected
     case invalidFormat
+    case fileTooLarge(String)
     
     var errorDescription: String? {
         switch self {
@@ -184,6 +185,8 @@ enum DocumentError: LocalizedError {
             return "The file has been modified externally. Please resolve the conflict."
         case .invalidFormat:
             return "The file format is not supported."
+        case .fileTooLarge(let message):
+            return message
         }
     }
     
@@ -197,6 +200,8 @@ enum DocumentError: LocalizedError {
             return "Save your changes to a different location or reload the file to discard changes."
         case .invalidFormat:
             return "Please select a valid Markdown file."
+        case .fileTooLarge:
+            return "Try opening a smaller file or increase the file size limit."
         }
     }
 }
