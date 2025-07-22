@@ -407,7 +407,8 @@ struct FileNode: Identifiable, Hashable {
                     }
                     let ext = url.pathExtension.lowercased()
                     return ext == "md" || ext == "markdown" || ext == "html" || ext == "htm" || 
-                           ext == "txt" || ext == "json" || ext == "yml" || ext == "yaml"
+                           ext == "txt" || ext == "json" || ext == "yml" || ext == "yaml" ||
+                           ext == "csv" || ext == "tsv"
                 }
                 .map { FileNode(url: $0) }
         } catch {
@@ -430,6 +431,8 @@ struct FileNode: Identifiable, Hashable {
             return "curlybraces"
         case "yml", "yaml":
             return "doc.badge.gearshape"
+        case "csv", "tsv":
+            return "tablecells"
         default:
             return "doc"
         }

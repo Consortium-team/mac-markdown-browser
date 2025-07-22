@@ -3,7 +3,8 @@ import Foundation
 
 struct FilePreviewView: View {
     let fileURL: URL
-    @StateObject private var viewModel = MarkdownViewModel()
+    @StateObject private var markdownViewModel = MarkdownViewModel()
+    @StateObject private var csvViewModel = CSVViewModel()
     @State private var showingEditView = false
     @State private var isLoading = true
     @State private var isExportingPDF = false
@@ -11,6 +12,10 @@ struct FilePreviewView: View {
     @State private var showExportSuccess = false
     @State private var exportedFileURL: URL?
     @State private var exportTask: Task<Void, Never>?
+    
+    private var viewModel: MarkdownViewModel {
+        markdownViewModel
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -31,6 +36,25 @@ struct FilePreviewView: View {
                 
                 Spacer()
                 
+                // Delimiter selector for CSV files
+                if fileURL.isCSVFile {
+                    Menu {
+                        ForEach(CSVDelimiter.allCases, id: \.self) { delimiter in
+                            Button(action: { csvViewModel.changeDelimiter(delimiter) }) {
+                                HStack {
+                                    Text(delimiter.displayName)
+                                    if csvViewModel.selectedDelimiter == delimiter {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        Label("Delimiter: \(csvViewModel.selectedDelimiter.displayName)", systemImage: "text.badge.xmark")
+                    }
+                    .padding(.trailing, 8)
+                }
+                
                 // Export PDF button for markdown and HTML files
                 if fileURL.isMarkdownFile || fileURL.isHTMLFile {
                     Button(action: exportToPDF) {
@@ -41,8 +65,8 @@ struct FilePreviewView: View {
                     .padding(.trailing, 8)
                 }
                 
-                // Edit mode toggle for markdown files
-                if fileURL.isMarkdownFile {
+                // Edit mode toggle for markdown and CSV files
+                if fileURL.isMarkdownFile || fileURL.isCSVFile {
                     // Use window instead of sheet
                     EditWindowButton(fileURL: fileURL)
                 }
@@ -69,8 +93,14 @@ struct FilePreviewView: View {
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if fileURL.isCSVFile {
+                // Preview for CSV files
+                CSVPreviewContainer(viewModel: csvViewModel)
+            } else if fileURL.isMarkdownFile || fileURL.isHTMLFile {
+                // Preview for Markdown and HTML documents
+                MarkdownPreviewView(htmlContent: viewModel.renderedHTML)
             } else if fileURL.isSupportedDocument {
-                // Preview for supported documents (Markdown and HTML)
+                // Preview for other supported documents
                 MarkdownPreviewView(htmlContent: viewModel.renderedHTML)
             } else {
                 // Show raw text for non-markdown files
@@ -85,23 +115,38 @@ struct FilePreviewView: View {
         }
         .onAppear {
             Task {
-                await viewModel.loadDocument(at: fileURL)
+                if fileURL.isCSVFile {
+                    await csvViewModel.loadDocument(at: fileURL)
+                } else {
+                    await viewModel.loadDocument(at: fileURL)
+                }
                 isLoading = false
             }
         }
         .onChange(of: fileURL) { newURL in
             // Check for unsaved changes before switching
-            if viewModel.hasUnsavedChanges {
+            let hasUnsavedChanges = newURL.isCSVFile ? csvViewModel.hasUnsavedChanges : viewModel.hasUnsavedChanges
+            
+            if hasUnsavedChanges {
                 // In a real app, we'd show an alert here
                 // For now, just save automatically
                 Task {
-                    await viewModel.saveCurrentDocument()
-                    await viewModel.loadDocument(at: newURL)
+                    if newURL.isCSVFile {
+                        await csvViewModel.saveCurrentDocument()
+                        await csvViewModel.loadDocument(at: newURL)
+                    } else {
+                        await viewModel.saveCurrentDocument()
+                        await viewModel.loadDocument(at: newURL)
+                    }
                     isLoading = false
                 }
             } else {
                 Task {
-                    await viewModel.loadDocument(at: newURL)
+                    if newURL.isCSVFile {
+                        await csvViewModel.loadDocument(at: newURL)
+                    } else {
+                        await viewModel.loadDocument(at: newURL)
+                    }
                     isLoading = false
                 }
             }
