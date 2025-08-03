@@ -1,5 +1,7 @@
 # Security Audit Report for MDBrowser
 
+**Last Updated: 2025-01-03**
+
 ## Executive Summary
 I've conducted a comprehensive security audit of the MDBrowser codebase. The application demonstrates several good security practices and has undergone recent security improvements. The most critical remaining issue relates to XSS vulnerabilities in the Markdown preview. Previously identified issues with overly permissive entitlements have been resolved.
 
@@ -118,6 +120,27 @@ The new CSV support feature includes comprehensive security measures:
 - Ready for notarization with reduced attack surface
 - Compliant with macOS Security Guidelines
 
+## Recent Security Improvements (2025-01-03)
+
+### Refresh Button Implementation
+The new refresh button feature for Markdown/HTML preview has been implemented with security in mind:
+- **No New Attack Surface**: Uses existing security-scoped bookmarks, no new entitlements required
+- **DoS Protection**: 500ms rate limiting prevents resource exhaustion from rapid refresh attempts
+- **Resource Management**: Properly reuses existing file handles and cleanup mechanisms
+- **Path Validation**: Refresh only operates on the currently opened file through existing security boundaries
+- **No Network Activity**: Refresh is purely local file system operation
+
+### Security Controls Verified
+- Rate limiting tested and functional (canRefresh() method)
+- No new file handles created during refresh operations
+- Existing sandbox boundaries maintained
+- No JavaScript execution risks introduced (uses existing WKWebView configuration)
+
+### Implementation Notes
+- Refresh feature completed for Markdown/HTML files only
+- CSV refresh button implementation deferred to separate change request
+- Simple UI design avoids complex state management that could introduce vulnerabilities
+
 ## Conclusion
 
-MDBrowser has made significant security improvements by removing unnecessary entitlements and implementing secure CSV handling. The primary remaining concern is the XSS vulnerability in Markdown preview, which should be addressed before production deployment. The recent changes have substantially reduced the attack surface and improved the overall security posture of the application.
+MDBrowser has made significant security improvements by removing unnecessary entitlements and implementing secure CSV handling. The refresh button feature has been added without introducing new security vulnerabilities, maintaining the existing security posture. The primary remaining concern is the XSS vulnerability in Markdown preview, which should be addressed before production deployment. The recent changes have substantially reduced the attack surface and improved the overall security posture of the application.

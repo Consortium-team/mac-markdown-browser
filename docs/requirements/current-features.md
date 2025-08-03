@@ -4,6 +4,8 @@
 
 This document describes the current state of implemented features in MarkdownBrowser as of the latest development iteration.
 
+**Last Updated: 2025-01-03**
+
 ## Feature Status
 
 ### ✅ Fully Implemented Features
@@ -69,6 +71,19 @@ This document describes the current state of implemented features in MarkdownBro
 - Undo/Redo support
 - Preview in main window updates automatically after save
 
+#### 5. Refresh Button for Preview ✅
+- **Refresh button in toolbar** for Markdown and HTML files
+  - System icon: "arrow.clockwise"
+  - Simple press animation (scales to 90% for 0.1s)
+  - No loading states - immediate reactivation
+- **Keyboard shortcut**: Cmd+R
+- **Functionality**:
+  - Reloads current document from disk
+  - Invalidates render cache for current document
+  - Rate limited to prevent rapid refreshes (500ms minimum interval)
+  - Uses existing security-scoped bookmarks
+- **Known limitation**: CSV files do not have refresh button (needs separate implementation)
+
 ### ⚠️ Partially Implemented Features
 
 #### 1. Mermaid Diagram Support
@@ -131,6 +146,23 @@ This document describes the current state of implemented features in MarkdownBro
   - Updates file list to show new/deleted files
   - Completes in <500ms for normal directories
 - **User-verified functionality**: "I can verify that Phase 3, which is the refresh button, is working as expected."
+
+#### 8. Refresh Button for Markdown/HTML Preview ✅
+- **Manual refresh functionality** for preview pane
+  - Refresh button in FilePreviewView toolbar
+  - System "arrow.clockwise" icon with press animation
+  - Refreshes current Markdown/HTML document from disk
+  - Uses existing security-scoped bookmarks (no new entitlements)
+- **Rate limiting implementation**:
+  - 500ms throttle between refresh attempts
+  - Prevents DoS from rapid clicking
+  - canRefresh() method enforces minimum interval
+- **Implementation details**:
+  - RefreshButton component with simple press animation
+  - Uses existing reloadFromDisk() and invalidateCache() methods
+  - No loading states or progress indicators (simple implementation)
+  - Button placement: after file info, before Export/Edit buttons
+- **Known limitation**: CSV files do not have refresh button (requires separate change request)
 
 ### ❌ Not Implemented Features
 

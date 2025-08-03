@@ -53,6 +53,16 @@ struct FilePreviewView: View {
                         Label("Delimiter: \(csvViewModel.selectedDelimiter.displayName)", systemImage: "text.badge.xmark")
                     }
                     .padding(.trailing, 8)
+                    
+                    // Refresh button for CSV files
+                    CSVRefreshButton(viewModel: csvViewModel)
+                        .padding(.trailing, 8)
+                }
+                
+                // Refresh button for markdown and HTML files
+                if fileURL.isMarkdownFile || fileURL.isHTMLFile {
+                    RefreshButton(viewModel: markdownViewModel)
+                        .padding(.trailing, 8)
                 }
                 
                 // Export PDF button for markdown and HTML files

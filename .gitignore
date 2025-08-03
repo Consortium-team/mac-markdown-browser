@@ -91,6 +91,9 @@ iOSInjectionProject/
 
 # macOS
 .DS_Store
+
+# Built app bundles
+*.app/
 .AppleDouble
 .LSOverride
 
