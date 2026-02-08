@@ -25,6 +25,10 @@ class MarkdownViewModel: ObservableObject {
     // Performance tracking
     private var renderStartTime: Date?
     
+    // Refresh rate limiting
+    private var lastRefreshTime: Date = .distantPast
+    private let minimumRefreshInterval: TimeInterval = 0.5 // 500ms
+    
     // MARK: - Initialization
     init() {
         setupBindings()
@@ -97,6 +101,36 @@ class MarkdownViewModel: ObservableObject {
         guard let document = currentDocument else { return }
         await document.reloadFromDisk()
         await renderDocument(document)
+    }
+    
+    /// Refreshes the current document from disk with rate limiting
+    func refreshContent() async {
+        guard let document = currentDocument,
+              canRefresh() else { return }
+        
+        lastRefreshTime = Date()
+        
+        // Invalidate cache for this document
+        invalidateCache(for: document.url)
+        
+        // Reload from disk
+        await document.reloadFromDisk()
+        
+        // Re-render the document
+        await renderDocument(document)
+        
+        // Post notification for UI updates
+        NotificationCenter.default.post(
+            name: .documentRefreshed,
+            object: nil,
+            userInfo: ["url": document.url]
+        )
+    }
+    
+    /// Checks if refresh is allowed based on rate limiting
+    func canRefresh() -> Bool {
+        guard !isRendering else { return false }
+        return Date().timeIntervalSince(lastRefreshTime) >= minimumRefreshInterval
     }
     
     /// Clears the render cache
@@ -351,4 +385,9 @@ extension MarkdownViewModel {
     var documentError: DocumentError? {
         currentDocument?.error
     }
+}
+
+// MARK: - Notification Names
+extension Notification.Name {
+    static let documentRefreshed = Notification.Name("documentRefreshed")
 }

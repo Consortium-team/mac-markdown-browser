@@ -93,6 +93,11 @@ class CSVViewModel: ObservableObject {
         await renderDocument(document)
     }
     
+    /// Refreshes the current document from disk (alias for reloadCurrentDocument)
+    func refreshContent() async {
+        await reloadCurrentDocument()
+    }
+    
     /// Gets performance metrics for the last render
     var lastRenderTime: TimeInterval? {
         guard let startTime = renderStartTime else { return nil }
